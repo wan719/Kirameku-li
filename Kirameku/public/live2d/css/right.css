@@ -67,6 +67,26 @@
   color: #0099cc;
 }
 
+/* 深色模式适配 */
+.dark #waifu-tips {
+  background-color: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 3px 15px 2px rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dark #waifu-tips span {
+  color: #38bdf8;
+}
+
+.dark #waifu-tool svg {
+  fill: #94a3b8;
+}
+
+.dark #waifu-tool svg:hover {
+  fill: #38bdf8;
+}
+
 #live2d {
   cursor: grab;
   height: 350px;
