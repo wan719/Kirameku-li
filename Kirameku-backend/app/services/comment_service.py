@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sqlmodel import Session, select
 from fastapi import HTTPException
 
