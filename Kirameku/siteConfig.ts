@@ -1,11 +1,13 @@
-// siteConfig.ts - 全站配置中心
+import { siteBrand } from "@/config/site";
+
+// 旧页面兼容层；新的身份与状态内容统一从 config/site.ts 读取。
 
 export const siteConfig = {
   // 网站标题与博主信息
-  title: "Starhiroの小站",
-  url: "https://boke.hiromu.top",
-  authorName: "Starhiro",
-  bio: "项目开源在 GitHub,点击下面的GitHub图标跳转,欢迎 star 和 fork！(◕‿◕)",
+  title: siteBrand.title,
+  url: "",
+  authorName: siteBrand.nickname,
+  bio: `${siteBrand.subtitle}。${siteBrand.identity}`,
 
   // 头像设置
   avatarUrl: "/images/hong.jpg",
@@ -38,28 +40,28 @@ export const siteConfig = {
 
   // 社交链接
   social: {
-    github: "https://github.com/Xinghongia/Kirameku",
-    gitee: "https://gitee.com/hongzyh",
-    google: "mailto:guh982719@gmail.com",
-    email: "your.email@example.com",
-    qq: "123456789",
-    wechat: "your_wechat_id",
+    github: siteBrand.github,
+    gitee: "",
+    google: `mailto:${siteBrand.email}`,
+    email: siteBrand.email,
+    qq: "",
+    wechat: "",
   },
 
   // 站点信息
-  buildDate: "2026-05-07T12:00:00",
+  buildDate: "",
   footerBadges: [
     { name: "Next.js 15", color: "text-sky-500" },
     { name: "React 19", color: "text-cyan-400" },
     { name: "Tailwind 4", color: "text-teal-400" },
   ],
   icpConfig: {
-    name: "赣ICP备2025078417号",
-    link: "https://beian.miit.gov.cn/",
+    name: "",
+    link: "",
   },
   moeIcpConfig: {
-    name: "萌ICP备20260527号",
-    link: "https://icp.gov.moe/?keyword=20260527",
+    name: "",
+    link: "",
   },
 
   // 分类标题

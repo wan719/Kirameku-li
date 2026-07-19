@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { projects } from "./projectsData";
-import { FolderGit2, ExternalLink } from "lucide-react";
+import { getProjectRepositoryUrl } from "@/config/projects";
+import { FolderGit2 } from "lucide-react";
 
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -13,8 +14,8 @@ export default function ProjectsPage() {
     const q = searchQuery.trim().toLowerCase();
     return projects.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
+        p.title.toLowerCase().includes(q) ||
+        p.summary.toLowerCase().includes(q) ||
         p.techStack.some((t) => t.toLowerCase().includes(q))
     );
   }, [searchQuery]);
@@ -66,7 +67,7 @@ export default function ProjectsPage() {
           {filtered.map((project) => (
             <motion.div
               layout
-              key={project.id}
+              key={project.slug}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -79,13 +80,13 @@ export default function ProjectsPage() {
 
                 <div className="flex items-start justify-between mb-3 md:mb-4 relative z-10">
                   <h2 className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white">
-                    {project.name}
+                    {project.title}
                   </h2>
                   {/* 链接图标 */}
                   <div className="flex items-center gap-2 md:gap-2.5 flex-shrink-0">
-                    {project.links.github && (
+                    {getProjectRepositoryUrl(project) && (
                       <a
-                        href={project.links.github}
+                        href={getProjectRepositoryUrl(project) ?? undefined}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-300"
@@ -96,35 +97,11 @@ export default function ProjectsPage() {
                         </svg>
                       </a>
                     )}
-                    {project.links.gitee && (
-                      <a
-                        href={project.links.gitee}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-300"
-                        title="Gitee"
-                      >
-                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M11.984 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.016 0zm6.09 5.333c.328 0 .593.266.592.593v1.482a.594.594 0 0 1-.593.592H9.777c-.982 0-1.778.796-1.778 1.778v5.63c0 .327.266.592.593.592h5.63c.982 0 1.778-.796 1.778-1.778v-.296a.593.593 0 0 0-.592-.593h-4.15a.592.592 0 0 1-.592-.592v-1.482c0-.326.266-.592.592-.592h6.81c.328 0 .593.266.593.592v3.408a4.74 4.74 0 0 1-4.741 4.74H7.11A4.74 4.74 0 0 1 2.37 14.81V9.186a4.74 4.74 0 0 1 4.74-4.741h10.963v.888z" />
-                        </svg>
-                      </a>
-                    )}
-                    {project.links.live && (
-                      <a
-                        href={project.links.live}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-300"
-                        title="在线预览"
-                      >
-                        <ExternalLink className="w-4 h-4 md:w-5 md:h-5" />
-                      </a>
-                    )}
                   </div>
                 </div>
 
                 <p className="text-xs md:text-sm text-slate-700 dark:text-slate-200 font-medium leading-relaxed line-clamp-3 mb-4 md:mb-6 relative z-10 min-h-[48px] md:min-h-[60px]">
-                  {project.description}
+                  {project.summary}
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 md:gap-2 relative z-10">

@@ -261,3 +261,29 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 56/56 通过。 |
 | `venv\Scripts\python.exe -m compileall -q app tests` | 0 | 应用与测试模块可编译。 |
 | `venv\Scripts\python.exe -m pip check` | 0 | `No broken requirements found.` |
+
+## 11. Task 7 前台品牌与项目配置
+
+新增 `Kirameku/config/site.ts`，集中保存锁定的公开站点身份、GitHub、邮箱、关闭状态的简历入口和三项状态快照。手机号、学校、具体年级均保持 `undefined`；配置中没有管理员登录名、私有仓库地址或简历文件。`getVisibleStatusSnapshotItems` 会裁剪文本并自动隐藏空项。
+
+新增 `Kirameku/config/projects.ts`，三张项目卡片与后续详情页共享 `ProjectConfig`：
+
+- `intern-pilot`：`已上线 · 持续迭代`，公开仓库和站内详情地址已配置，未虚构线上 demo 地址。
+- `intern-pilot-harmonyos-agent`：`最小 Demo 验证中`，文案明确当前是 DevEco / HarmonyOS 最小链路验证，不包装成完整产品。
+- `second-brain`：`文章整理中`，`repositoryPublic=false`，无仓库、详情或 demo 地址，当前不可点击。
+
+配置模块提供启动时静态校验：slug 不得重复；公开仓库项目必须有有效 HTTP(S) 仓库地址；私有项目不得暴露仓库地址；demo 必须是有效外链，详情必须是站内路径；SecondBrain 必须保持私有且无跳转目标。`getProjectPrimaryAction` 严格按“有效 demo → 有效详情 → 无按钮”返回，`getProjectRepositoryUrl` 同时检查公开标记和 URL。
+
+原 `app/projects/projectsData.ts` 已改为新配置的兼容导出，现有 `/projects` 页面同步使用新字段和仓库可见性函数，因此旧 HAXAtom、StarVid、原作者 Gitee/站点项目不再进入项目列表。旧 `siteConfig.ts` 作为尚未完成页面迁移的兼容层，身份、GitHub、邮箱、域名和备案字段已经引用或收敛到新品牌安全值；背景、音乐、头像等素材按任务边界留到 Task 12 集中处理。
+
+项目封面路径预留在 `/brand/projects/`；Task 7 的现有项目页不渲染封面，因此构建无 404。真实 InternPilot 截图尚未选取或脱敏，不在本任务中提交；后续视觉任务不得用原作者封面或未脱敏截图替代。
+
+### 11.1 测试证据
+
+| 命令 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:config`（实现前） | 1 | 按预期失败：`config/site.ts` 与 `config/projects.ts` 尚不存在。 |
+| `pnpm test:config`（实现后） | 0 | Node 内置测试 5/5 通过；有一条 `.ts` ESM 模块类型性能提示，不影响行为，未为消除提示而改变全项目模块类型。 |
+| `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
+| `pnpm exec eslint config/site.ts config/projects.ts app/projects/projectsData.ts app/projects/page.tsx tests/project-config.test.mjs` | 0 | 本任务文件 0 errors、0 warnings。 |
+| `pnpm build` | 0 | Next.js 生产构建成功，39 个路由生成；后端未启动时 RSS 保留既有非阻塞 `ECONNREFUSED 127.0.0.1:8000` 日志。 |
