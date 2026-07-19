@@ -346,3 +346,38 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | 生产浏览器验收（1440×900、390×844） | 0 | 六段 DOM 顺序正确；桌面 Hero 高 641px 且下一段在首屏露出；移动 Hero 高 561px、状态段从 633px 开始；两种视口横向溢出均为 0；三项目标题正确、SecondBrain 不可点击；空文章与统计降级文案可见；插画加载完成；控制台 0 errors、0 warnings。 |
 
 当前没有启动后端或连接 PostgreSQL，因此本轮浏览器看到安全空状态；公开文章开启、真实新 namespace 访问量和运行天数的页面呈现仍需在有后端的验收环境联调。数据解析、开关门控和开启状态由注入式 fetch 自动化测试覆盖。
+
+## 14. Task 10 项目列表与详情页
+
+`/projects` 已改为三张统一项目卡片，直接遍历 `projectConfigs`，不再维护页面内第二份项目数据。每张卡片展示封面、真实状态、摘要与技术栈；InternPilot 和鸿蒙 Agent 分别提供站内详情与公开 GitHub 源码入口，外链使用新标签页、`rel="noopener noreferrer"` 和外部链接图标。SecondBrain 使用共鸣精灵作为安全视觉，只展示“文章整理中”摘要，DOM 内没有任何链接、按钮、仓库地址或虚假详情入口。
+
+新增共享动态路由 `app/projects/[slug]/page.tsx` 和 `ProjectDetail` 模板。`generateStaticParams` 只生成：
+
+- `/projects/intern-pilot`
+- `/projects/intern-pilot-harmonyos-agent`
+
+详情页依次展示封面与状态、项目背景、解决的问题、技术栈、核心能力、当前进度、开发历程、后续计划和可用的源码入口。页面不运行时请求 GitHub，也不复制 README 全文。`/projects/second-brain` 和任意未知 slug 都调用 `notFound()` 并返回 404。
+
+`config/projects.ts` 增加 `developmentHistory`、详情 slug 白名单、`getProjectDetailConfig` 和 demo URL 安全解析。InternPilot 的功能范围与开发历程依据本机公开兄弟仓库 README v1.3.1 摘要整理；鸿蒙 Agent 依据本机公开 README 如实记录“DevEco 工程已建立、单页本地 Mock 闭环已实现、仍处于最小 Demo 可运行验证阶段”，没有写成已完成产品。虽然 InternPilot README 记录了线上地址，本阶段仍按设计保持“查看项目先进入站内详情”，没有新增 demo URL；因此按钮优先级规则保持“有效 demo → 详情 → 隐藏”，详情页当前只显示源码入口。
+
+项目封面均位于 `public/brand/projects/`：
+
+- `intern-pilot.webp`：从本机公开 `intern-pilot/docs/assets/screenshots/10-admin-rag.png` 裁切为 1536×864。选用的 RAG 管理界面不含账号、邮箱、Token、真实简历或数据库凭据；未联网抓图，也未修改兄弟仓库。
+- `intern-pilot-harmonyos-agent.webp`：使用内置 image generation 生成 16:9 抽象工程封面，再通过 Pillow 缩放并编码为 1536×864 WebP。画面仅含无品牌设备轮廓、节点、波形和共鸣环，无文字、Logo、人物、游戏或受版权保护素材。
+
+两张图片分别约 58 KiB 与 52 KiB。生产浏览器最初发现 Next 图片懒加载/优化链没有为两张本地 WebP 设置 `currentSrc`，但优化接口本身返回 200；由于文件已经压缩，项目卡片和详情改用 Next Image `unoptimized` 直接提供本地静态文件。复验后三张列表封面与详情封面全部 `complete=true`、自然尺寸正确且无控制台错误。
+
+### 14.1 测试与浏览器验收
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:projects`（实现前） | 1 | 按预期失败：详情配置函数与白名单尚不存在。 |
+| `pnpm test:projects`（封面直出回归断言后） | 1 | 3/4 通过，新断言按预期指出项目图片尚未设置 `unoptimized`。 |
+| `pnpm test:projects`（最终） | 0 | 4/4 通过：两项详情白名单、未知/SecondBrain 无详情、完整模板数据、三张 WebP、共享配置、404、无运行时 fetch、外链安全和封面直出。保留既知 `.ts` ESM 模块类型性能提示。 |
+| `pnpm test:config` | 0 | 5/5 通过，SecondBrain 私有边界与按钮优先级保持稳定。 |
+| `pnpm test:home` | 0 | 5/5 通过，首页项目预览与统一配置保持稳定。 |
+| `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
+| Task 10 定向 ESLint | 0 | 项目列表、动态详情、共享卡片/模板、项目配置和专项测试 0 errors、0 warnings。 |
+| `pnpm build` | 0 | 40 个页面生成成功；`/projects/[slug]` 明确列出两个 SSG 详情；后端未启动时仍只有既知 RSS `ECONNREFUSED`。 |
+| 生产 HTTP 验收 | 0 | `/projects`、两个公开详情返回 200；`/projects/second-brain` 与 `/projects/unknown-project` 返回 404。 |
+| 生产浏览器验收（1440×900、390×844） | 0 | 三张卡片标题与状态正确；SecondBrain 链接数为 0；两个 GitHub 外链的 href/rel 正确；七个详情章节完整；鸿蒙状态为“最小 Demo 验证中”；列表和详情横向溢出均为 0；三张列表封面和详情封面实际加载；页面控制台 0 errors、0 warnings。 |
