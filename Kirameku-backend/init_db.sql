@@ -306,18 +306,6 @@ CREATE TABLE IF NOT EXISTS public_visitor_stat (
 );
 
 -- ============================================
--- 插入默认管理员账号（密码: admin123）
--- bcrypt hash of "admin123"
--- ============================================
-INSERT INTO "user" (username, hashed_password, nickname, is_admin)
-VALUES (
-    'admin',
-    '$2b$12$LJ3m4ys4Pz0C5eK8rZqYaOzLiGh5v1DmdMFRnDvMQfLpUfKlPu5S.',
-    '管理员',
-    TRUE
-) ON CONFLICT (username) DO NOTHING;
-
--- ============================================
 -- 插入默认站点配置
 -- ============================================
 INSERT INTO site_config (key, value, description) VALUES

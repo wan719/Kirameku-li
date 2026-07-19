@@ -4,6 +4,17 @@
 > 建表脚本：`init_db.sql`
 > 执行方式：`psql -U postgres -d kirameku -f init_db.sql`
 
+## 本地初始化与管理员创建
+
+仓库不提供默认管理员账号或默认密码。首次本地启动按以下顺序执行：
+
+1. 配置本地 `.env`，并执行 `psql -U postgres -d kirameku -f init_db.sql` 初始化数据库。
+2. 在 `Kirameku-backend/` 运行 `venv\Scripts\python.exe -m app.scripts.create_admin`。
+3. 按提示输入用户名、邮箱和两次密码；密码使用隐藏输入，不接受命令行参数。
+4. 启动 FastAPI 后端和管理后台，在 `/admin` 使用刚创建的管理员登录。
+
+重复用户名或邮箱会被拒绝。命令成功时只输出创建结果、用户名和邮箱，不输出密码。
+
 ## 概览
 
 共 14 张表，覆盖博客全部功能：文章、分类、标签、评论、留言板、说说、相册、项目展示、友链、站点配置。

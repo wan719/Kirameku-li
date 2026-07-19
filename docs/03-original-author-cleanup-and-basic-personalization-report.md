@@ -208,3 +208,29 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `pnpm exec eslint app/api/visitors.ts components/layout/VisitorTracker.tsx components/widgets/SiteDashboard.tsx app/garden/page.tsx` | 0 | 0 errors；`/garden` 的 2 个既有 unused warnings 未在本阶段清理。 |
 
 当前环境没有可连接的 PostgreSQL，未对真实库执行 DDL 或业务联调。既有部署在更新代码后必须执行幂等的 `public_visitor_stat` 建表语句（或按项目既有初始化流程执行更新后的 `init_db.sql`）；这是环境执行项，不影响内存数据库自动化验证，也不要求删除旧统计。
+
+## 9. Task 5 安全管理员引导
+
+`Kirameku-backend/init_db.sql` 已删除默认管理员插入语句、固定用户名、固定邮箱和示例密码哈希，只保留表结构与幂等初始化。没有删除或修改数据库中的历史文章、动态、相册、访客明细和统计数据。
+
+新增 `app.services.user_service.create_admin` 作为管理员创建的单一服务入口，复用现有 `hash_password`，并执行用户名/邮箱规范化、12 字符最小密码长度、用户名与邮箱大小写不敏感去重以及事务回滚。新增 `python -m app.scripts.create_admin` 交互命令：用户名和邮箱由标准输入读取，密码由 `getpass` 隐藏读取两次；命令拒绝全部命令行参数，不输出密码、哈希、数据库地址或异常详情。`DATABASE.md` 已补齐初始化数据库、创建管理员、启动后台和访问 `/admin` 的顺序，并明确仓库不提供默认凭据。
+
+管理后台登录表单不再预填账号和密码；旧角色演示页不再用固定密码静默切换身份；fake server 生产模式已关闭，模拟登录固定拒绝且不签发 Token。真实代码路径确认 FastAPI 仅挂载忽略的 `admin/dist`，Task 1 识别的 `admin/build/static` 实为误提交的旧编译快照而非当前挂载目录，因此删除该静态快照及同目录生成的 HTML/图标/版本文件，只保留 `admin/build/*.ts` 构建配置。正式构建仍由 `pnpm build` 生成忽略的 `admin/dist`，未提交构建产物。
+
+### 9.1 测试与安全验证
+
+| 命令 | 退出码 | 结果 |
+|---|---:|---|
+| `venv\Scripts\python.exe -m unittest tests.test_admin_bootstrap.AdminBootstrapTests.test_admin_frontend_has_no_default_credentials_or_mock_login`（实现前） | 1 | 按预期命中登录页预填默认账号与密码。 |
+| `venv\Scripts\python.exe -m unittest tests.test_admin_bootstrap` | 0 | 8/8 通过：SQL 无 seed、管理员创建/哈希/角色、重复用户名、重复邮箱、密码不一致、隐藏输入、安全输出、参数拒绝和后台默认凭据扫描。 |
+| `venv\Scripts\python.exe -m compileall -q app` | 0 | 后端应用模块可编译。 |
+| `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 44/44 通过。 |
+| `venv\Scripts\python.exe -m app.scripts.create_admin --password DoNotEchoThisValue` | 2 | 参数被拒绝；输出仅包含固定错误信息，未回显参数值。 |
+| `git grep -n -I 'admin123' -- ':!docs/**' ':!DATABASE.md'` | 1 | 运行源码和被跟踪资产无默认密码命中。 |
+| `pnpm typecheck`（管理后台） | 0 | Vue/TypeScript 类型检查通过。 |
+| `pnpm build`（管理后台） | 0 | Vite 生产构建通过，生成物仅位于忽略的 `admin/dist`。 |
+| 定向 ESLint（首次） | 1 | 仅 26 条 CRLF/Prettier 格式错误，无类型或行为错误。 |
+| `pnpm exec prettier --write build/plugins.ts mock/login.ts src/views/login/index.vue src/views/permission/page/index.vue` | 0 | 只格式化本任务修改的四个管理后台文件。 |
+| 同一组文件定向 ESLint（格式化后） | 0 | 0 errors，0 warnings。 |
+
+当前环境没有可连接的 PostgreSQL，因此没有执行真实交互创建；成功写入、重复冲突、哈希和回滚由内存 SQLite 自动化测试覆盖。生产或验收环境仍需由操作者在后端目录运行 `python -m app.scripts.create_admin` 并自行输入本地凭据。
