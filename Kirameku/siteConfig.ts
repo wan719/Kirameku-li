@@ -32,7 +32,7 @@ export const siteConfig = {
 
   // 云音乐配置（网易云音乐）
   // 填歌单 ID 则自动拉取整个歌单，填歌曲 ID 列表则只播放指定歌曲
-  cloudMusicPlaylistId: "17943739323",  // 歌单 ID（优先）
+  cloudMusicPlaylistId: "",             // 未配置时不请求歌单
   cloudMusicIds: [],                     // 歌曲 ID 列表（歌单为空时使用）
 
   // 后端 API 地址（留空，开发通过 next.config.ts rewrites 代理，生产通过 Nginx 反代）

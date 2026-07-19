@@ -316,3 +316,33 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | 生产模式浏览器验收（1440×900、390×844） | 0 | 桌面导航顺序正确；移动抽屉显示四项，动态可访问名称和 `aria-expanded` 正确，Escape 可关闭；主题切换后重载仍保持深色；Logo/字标自然尺寸非零，深色滤镜生效；Header/Footer 可见；两种视口横向溢出均为 0；控制台 0 errors、0 warnings。 |
 
 浏览器截图中的旧头像、歌单和浮动小组件属于 Task 12 明确安排的后续清理对象，本任务未把它们误当作新品牌资源，也没有新增或复制任何原作者、Live2D 或《鸣潮》素材。
+
+## 13. Task 9 个性化首页
+
+首页已按锁定顺序重构为 Hero、状态快照、重点项目、文章入口、站点信息和歌单整理中六段。`app/page.tsx` 不再并行请求历史文章数、动态数和相册数，也不再导入旧 `HomeClient` 聚合页；动态、照片墙、DogDiary 和相册组件源码仍保留，但默认首页配置全部关闭且首页展示层不导入它们。
+
+新增 `config/home.ts` 作为首页模块、空歌单和公共数据的类型化入口。首页首先读取后端 `/api/site/public-config`：配置请求失败、响应失败或结构非法时立即使用“全部公共内容关闭、无文章、无统计”的安全降级，不再继续探测旧内容。配置成功后仅在 `contentVisibility.posts=true` 时请求公共文章列表；访问统计单独读取隔离后的 `/api/visitors/count`，失败时显示“公开统计暂不可用”，绝不回退历史文章、动态、相册或原 namespace 数字。动态与相册开关关闭时没有对应请求和渲染路径。
+
+三个重点项目直接遍历 `projectConfigs`；前两个进入统一配置的站内详情，SecondBrain 无 `Link`、仓库或按钮，保持不可点击。文章为空时显示锁定文案“这里会记录代码、灵感与成长，内容正在慢慢整理。”以及“查看项目”“关于我”两个按钮。站点信息只显示新 namespace 访问量和后端实际返回的可选运行天数。
+
+`MusicProvider` 改为只读取 `musicConfig`。当前歌单 ID 与歌曲 ID 均为空时直接结束加载，不再请求数据库型旧 `/api/site-config`，也不会构造 `/api/music` 请求；兼容 `siteConfig.ts` 内原作者歌单 ID 同步清空。首页只显示轻量“歌单整理中”状态，音乐播放器源码继续保留到 Task 12 集中清理。
+
+首页正式视觉新增 `public/brand/illustrations/resonance-sprite.webp`。插画使用内置 image generation 生成原创月牙、星光、共鸣圆环和抽象波形线条，先输出纯色键背景，再用安装的 `remove_chroma_key.py` 生成 alpha PNG，最后通过 Pillow 无损 WebP 编码。最终文件为 1003×1568、约 249 KiB、alpha 范围 0–255；浏览器实际解码自然尺寸为 480×750（Next 优化产物），无色键底或加载错误。插画没有人物、动物、文字、原作者素材、Live2D 造型或《鸣潮》元素；Hero 使用完整形态，文章空状态以小尺寸简化呈现。
+
+### 13.1 测试与浏览器验收
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:home`（实现前） | 1 | 按预期失败：`config/home.ts` 尚不存在。 |
+| `pnpm test:home`（旧歌单残留断言后） | 1 | 4/5 通过，新增断言按预期命中兼容配置中的旧歌单 ID。 |
+| `pnpm test:home`（最终） | 0 | 5/5 通过：六段模块默认值、后端失败安全降级、公开文章关闭时不发请求、开启时只取公共列表、页面顺序/空状态/旧模块与歌单约束。保留既知 `.ts` ESM 模块类型性能提示。 |
+| `pnpm test:config` | 0 | 5/5 通过。 |
+| `pnpm test:brand` | 0 | 4/4 通过。 |
+| `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
+| Task 9 定向 ESLint | 0 | 首页、首页配置、MusicProvider、兼容站点配置和专项测试 0 errors、0 warnings。 |
+| `pnpm build` | 0 | Next.js 生产构建通过，38 个路由完成预渲染；后端未启动时只有既知 RSS `ECONNREFUSED 127.0.0.1:8000`。 |
+| `pnpm exec next start -p 3001` | 0 | 生产服务启动，首页返回 HTTP 200。 |
+| 生产访问日志扫描 | 0 | 未出现 `/api/music`、`/api/site-config`、`/api/chatters` 或 `/api/albums` 请求。 |
+| 生产浏览器验收（1440×900、390×844） | 0 | 六段 DOM 顺序正确；桌面 Hero 高 641px 且下一段在首屏露出；移动 Hero 高 561px、状态段从 633px 开始；两种视口横向溢出均为 0；三项目标题正确、SecondBrain 不可点击；空文章与统计降级文案可见；插画加载完成；控制台 0 errors、0 warnings。 |
+
+当前没有启动后端或连接 PostgreSQL，因此本轮浏览器看到安全空状态；公开文章开启、真实新 namespace 访问量和运行天数的页面呈现仍需在有后端的验收环境联调。数据解析、开关门控和开启状态由注入式 fetch 自动化测试覆盖。

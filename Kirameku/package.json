@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:config": "node --experimental-strip-types --test tests/project-config.test.mjs",
-    "test:brand": "node --experimental-strip-types --test tests/brand-shell.test.mjs"
+    "test:brand": "node --experimental-strip-types --test tests/brand-shell.test.mjs",
+    "test:home": "node --experimental-strip-types --test tests/homepage.test.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",
