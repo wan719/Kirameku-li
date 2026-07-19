@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 96 96" role="img" aria-labelledby="title description">
+  <title id="title">Kirameku Wan favicon</title>
+  <desc id="description">The Wan mark and resonance rings</desc>
+  <rect width="96" height="96" rx="18" fill="#FAFAF8"/>
+  <circle cx="48" cy="48" r="38" fill="none" stroke="#1EC8B7" stroke-width="3" stroke-linecap="round" stroke-dasharray="54 9 17 7" transform="rotate(-18 48 48)"/>
+  <circle cx="48" cy="48" r="32" fill="none" stroke="#7B61FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="31 8 46 10" transform="rotate(27 48 48)"/>
+  <path d="M27 30c-2 12-2 25 0 36m0-35c6-2 11-2 16 0m-16 15c5-1 10-1 15 0m-15 19c6 1 11 0 15-1m1-32c0 12-1 22-1 32" fill="none" stroke="#0D6E75" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M55 27c6 1 12 0 17-2m-13-5c-1 5-4 10-9 15m4-1c7-2 14-2 21 0m-19 1c-1 6-1 11 0 16m0-15c6-1 12-1 17 0m-17 8c5-1 11-1 16 0m1-8c0 5-1 10-2 14m-15 2c-2 8-6 14-13 19m15-19c0 9 4 15 13 17 5 1 8-1 10-6" fill="none" stroke="#1A2338" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

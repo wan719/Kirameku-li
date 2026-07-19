@@ -432,3 +432,29 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | 生产 HTTP 验收 | 0 | `/` 200、`/music` 200、`/moments` 404、`/photowall` 404。 |
 | 生产浏览器验收 | 0 | 首页旧模块链接、`#waifu`、`#waifu-toggle`、Live2D script 和 Toolbox 文案数量均为 0；`/music` 显示“歌单整理中”且不显示旧配置提示；页面无横向溢出，浏览器 0 errors。 |
 | 生产访问日志扫描 | 0 | 没有 `/live2d`、旧 `/images`、`/api/music` 或 `/api/uapis` 请求。 |
+
+## 17. Task 13 后台品牌清理
+
+管理后台的平台标题、静态浏览器标题、登录页与侧栏统一为 `Kirameku · 晚`。`public/logo.svg` 和新建的 `public/favicon.svg` 复用第三阶段原创的手写“晚”字与共鸣圆环图形；侧栏 `getLogo()`、登录页品牌图和无头像时的用户占位图均改为新 Logo，主题主色同步为品牌深青色。旧动漫 `icon.png`、旧个人头像 `user.jpg`、模板 Logo `avatar.svg` 与旧 `favicon.ico` 已删除。
+
+登录页底部不再链接模板站点，只保留本站名称；页面没有默认管理员、默认账号或默认密码提示。`package.json` 中 pure-admin 的仓库、作者、许可证等元数据属于必要上游署名，按任务边界保留，没有伪装成本站作者信息。登录请求、角色判断、Token 清理和路由守卫没有修改。
+
+### 17.1 测试与浏览器验收
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm install --frozen-lockfile`（实现前） | 0 | pnpm 11.9.0 冻结安装通过，锁文件未变化。 |
+| `pnpm typecheck`（实现前） | 0 | 管理后台基线类型检查通过。 |
+| `pnpm build`（实现前） | 0 | 管理后台基线生产构建通过。 |
+| `pnpm test:brand`（实现前） | 1 | 1/4 通过；品牌标题、Logo 使用和旧素材/外链清理三项按预期失败，既有鉴权守卫断言通过。 |
+| `pnpm test:brand`（实现后） | 0 | 4/4 通过：标题与 favicon、登录页/侧栏 Logo、旧个人素材与外链移除、未登录路由守卫均受覆盖。 |
+| `pnpm typecheck`（实现后） | 0 | Vue/TypeScript 类型检查通过。 |
+| `pnpm build`（实现后） | 0 | Vite 生产构建通过，生成物仅位于忽略的 `admin/dist`。 |
+| Task 13 定向 ESLint（首次） | 1 | 仅命中 apply_patch 造成的 16 条 CRLF/Prettier 格式错误，没有行为或类型错误。 |
+| `pnpm exec prettier --write ...` | 1 | 指定源码、测试、JSON、HTML 和 package 文件均已格式化；命令最后因 Prettier 无法自动推断两个 SVG 的 parser 返回 1，SVG 保持合法原始格式。 |
+| Task 13 定向 ESLint（格式化后） | 0 | 登录页、静态资源入口、导航 Hook 与用户管理 Hook 共 0 errors、0 warnings。 |
+| `pnpm dev --host 127.0.0.1 --port 8849` | 0 | 本地开发服务可启动；验收完成后已停止，端口不再监听。 |
+| 未登录浏览器验收（桌面、390×844） | 0 | 新 Logo、`Kirameku · 晚`、品牌主色和 favicon 正常；表单完整可见，无默认账号提示，无横向溢出，当前页面无应用错误。 |
+| 直接访问 `/#/welcome` | 0 | 未登录状态被重定向到 `/#/login`，标题为 `登录 \| Kirameku · 晚`，认证没有弱化。 |
+
+由于没有读取或使用真实管理员凭据，也没有创建默认账号，本轮无法进入登录后的侧栏做浏览器截图；侧栏名称与 Logo 已由共享平台配置、`getLogo()` 源码断言、类型检查和生产构建验证，登录后视觉列入最终人工验收步骤。

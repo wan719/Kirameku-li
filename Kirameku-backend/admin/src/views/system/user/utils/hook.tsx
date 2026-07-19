@@ -5,7 +5,6 @@ import editForm from "../form/index.vue";
 import { zxcvbn } from "@zxcvbn-ts/core";
 import { handleTree } from "@/utils/tree";
 import { message } from "@/utils/message";
-import userAvatar from "@/assets/user.jpg";
 import { usePublicHooks } from "../../hooks";
 import { addDialog } from "@/components/ReDialog";
 import type { PaginationProps } from "@pureadmin/table";
@@ -17,6 +16,7 @@ import {
   hideTextAtIndex,
   deviceDetection
 } from "@pureadmin/utils";
+
 import {
   getRoleIds,
   getDeptList,
@@ -40,6 +40,8 @@ import {
   reactive,
   onMounted
 } from "vue";
+
+const userAvatar = `${import.meta.env.BASE_URL}logo.svg`;
 
 export function useUser(tableRef: Ref, treeRef: Ref) {
   const form = reactive({
