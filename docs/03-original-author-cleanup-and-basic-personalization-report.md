@@ -381,3 +381,26 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `pnpm build` | 0 | 40 个页面生成成功；`/projects/[slug]` 明确列出两个 SSG 详情；后端未启动时仍只有既知 RSS `ECONNREFUSED`。 |
 | 生产 HTTP 验收 | 0 | `/projects`、两个公开详情返回 200；`/projects/second-brain` 与 `/projects/unknown-project` 返回 404。 |
 | 生产浏览器验收（1440×900、390×844） | 0 | 三张卡片标题与状态正确；SecondBrain 链接数为 0；两个 GitHub 外链的 href/rel 正确；七个详情章节完整；鸿蒙状态为“最小 Demo 验证中”；列表和详情横向溢出均为 0；三张列表封面和详情封面实际加载；页面控制台 0 errors、0 warnings。 |
+
+## 15. Task 11 文章空状态与关于页
+
+文章页继续只调用第二阶段已统一门控的 `getPosts` 公共文章接口。首次结果为空时不请求或渲染分类，因此历史分类数量不会进入页面；有公开文章后才加载分类名称，并彻底移除 `post_count` 展示。空状态使用锁定文案“这里会记录代码、灵感与成长，内容正在慢慢整理。”，提供“查看项目”和“关于我”两个站内入口。加载、分页和分类按钮均使用原生可访问控件，分类状态通过 `aria-pressed` 暴露。
+
+关于页不再读取 `app/about/about.md` 或渲染原作者 Markdown，而是直接消费 `siteBrand`、`projectConfigs` 和状态快照配置。页面包含简短自述、个人定位、Java 全栈 / AI 工程 / HarmonyOS 三个方向、三个代表项目、ChatGPT + Codex + Obsidian 工作流、当前状态和公开联系方式。SecondBrain 只作为私人知识工作流的公开摘要出现，没有仓库地址或入口；页面源码没有读取手机号、学校、年级或私有仓库。
+
+新增 `AboutContactActions` 最小客户端组件，提供安全 GitHub 外链、`mailto:3425446714@qq.com` 和原生按钮复制邮箱。复制状态通过 `role="status"`、`aria-live="polite"` 输出“复制成功”或“复制失败，请使用邮件按钮”。浏览器验收发现嵌入式浏览器的剪贴板 Promise 可能长期不返回，因此写入操作增加 1 秒超时并可靠进入失败反馈；真实坐标点击在授权环境中返回“复制成功”。简历仍由 `siteBrand.resume.enabled && siteBrand.resume.url` 双重门控，默认不生成 DOM。
+
+旧 `app/about/about.md` 已不再参与构建，但文件和其中的原作者文字留到 Task 12 资产与旧模块专项清理中统一删除。浏览器中仍出现的 Live2D、看板娘文案和浮动工具入口同属 Task 12，不在本提交提前处理。
+
+### 15.1 测试与浏览器验收
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:content`（实现前） | 1 | 1/5 通过；其余四项按预期命中旧文章空状态、旧分类计数、原作者 Markdown 关于页和缺失的复制组件。 |
+| `pnpm test:content`（最终） | 0 | 5/5 通过：空状态与两个入口、无分类计数、关于页结构、剪贴板成功/失败/超时反馈、隐私字段和默认关闭简历。保留既知 `.ts` ESM 模块类型性能提示。 |
+| `pnpm exec tsc --noEmit`（首次） | 1 | 定位到当前 `lucide-react` 不导出品牌图标 `Github`；改用同库 `GitBranch` 后恢复，无新增依赖。 |
+| `pnpm exec tsc --noEmit`（最终） | 0 | 前台 TypeScript 检查通过。 |
+| Task 11 定向 ESLint | 0 | 文章页、关于页、联系方式组件和专项测试 0 errors、0 warnings。 |
+| `pnpm build` | 0 | 40 个页面生成成功，`/posts` 与 `/about` 均静态预渲染；后端未启动时仍只有既知 RSS `ECONNREFUSED 127.0.0.1:8000`。 |
+| `pnpm exec next start -p 3001` | 0 | 生产服务启动，`/posts` 返回 HTTP 200。 |
+| 生产浏览器验收（1280 默认视口、390×844） | 0 | 空状态文案与两个链接正确；关于页三项目和完整结构可见；简历、手机号、学校、年级均不在 DOM；两种视口横向溢出均为 0；复制按钮实际点击显示“复制成功”，获得焦点后 `tag=BUTTON`、`tabIndex=0`。Live2D 的既有普通日志待 Task 12 清理，页面无应用 error。 |

@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Loader2 } from "lucide-react";
-import PostCard, { type PostOut } from "@/components/posts/PostCard";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, BookOpen, Loader2, UserRound } from "lucide-react";
+import Link from "next/link";
+
 import { getCategories, getPosts, type CategoryItem } from "@/app/api";
+import PostCard, { type PostOut } from "@/components/posts/PostCard";
+
+const pageSize = 12;
 
 export default function PostsPage() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -12,20 +16,8 @@ export default function PostsPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const pageSize = 12;
+  const [hasMore, setHasMore] = useState(false);
 
-  // 获取分类
-  useEffect(() => {
-    getCategories()
-      .then((data) => {
-        const sorted = [...data].sort((a, b) => a.sort - b.sort);
-        setCategories(sorted);
-      })
-      .catch(() => {});
-  }, []);
-
-  // 获取文章
   useEffect(() => {
     queueMicrotask(() => setLoading(true));
     getPosts({
@@ -38,82 +30,109 @@ export default function PostsPage() {
         setPosts(data);
         setHasMore(data.length === pageSize);
       })
-      .catch(() => { setPosts([]); })
-      .finally(() => { setLoading(false); });
-  }, [activeCategory, pageSize]);
+      .catch(() => {
+        setPosts([]);
+        setHasMore(false);
+      })
+      .finally(() => setLoading(false));
+  }, [activeCategory]);
+
+  useEffect(() => {
+    if (posts.length === 0 || categories.length > 0) return;
+
+    getCategories()
+      .then((data) => {
+        setCategories([...data].sort((a, b) => a.sort - b.sort));
+      })
+      .catch(() => setCategories([]));
+  }, [categories.length, posts.length]);
+
+  const selectCategory = (category: string | null) => {
+    setPage(1);
+    setActiveCategory(category);
+  };
 
   const handleLoadMore = () => {
-    const next = page + 1;
-    setPage(next);
+    const nextPage = page + 1;
     setLoading(true);
     getPosts({
       status: "published",
-      page: next,
+      page: nextPage,
       size: pageSize,
       ...(activeCategory ? { category: activeCategory } : {}),
     })
       .then((data) => {
-        setPosts((prev) => [...prev, ...data]);
+        setPosts((current) => [...current, ...data]);
+        setPage(nextPage);
         setHasMore(data.length === pageSize);
       })
-      .catch(() => {})
       .finally(() => setLoading(false));
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
-      {/* 页头 */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-6 md:mb-10"
-      >
-        <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-          <BookOpen className="w-5 h-5 md:w-7 md:h-7 text-sky-500" />
-          <h1 className="text-xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">
-            文章
-          </h1>
+    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 md:py-16 lg:px-8">
+      <header className="mb-10 max-w-2xl">
+        <div className="mb-3 flex items-center gap-3 text-teal-700 dark:text-teal-300">
+          <BookOpen aria-hidden="true" className="h-6 w-6" />
+          <span className="text-sm font-semibold">公开笔记</span>
         </div>
-        <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 ml-7 md:ml-10">
-          记录技术探索、学术研究与生活感悟
+        <h1 className="text-3xl font-bold text-slate-950 dark:text-white md:text-4xl">
+          文章
+        </h1>
+        <p className="mt-4 leading-7 text-slate-600 dark:text-slate-300">
+          记录工程实践、学习方法，以及值得反复回看的思考。
         </p>
-      </motion.div>
+      </header>
 
-      {/* 分类筛选 */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.15 }}
-        className="mb-5 md:mb-8 flex flex-wrap gap-1.5 md:gap-2"
-      >
-        <FilterTab
-          label="全部"
-          count={null}
-          active={activeCategory === null}
-          onClick={() => setActiveCategory(null)}
-        />
-        {categories.map((cat) => (
+      {posts.length > 0 && categories.length > 0 && (
+        <nav aria-label="文章分类" className="mb-8 flex flex-wrap gap-2">
           <FilterTab
-            key={cat.id}
-            label={cat.name}
-            count={cat.post_count}
-            active={activeCategory === cat.slug}
-            onClick={() => setActiveCategory(cat.slug)}
+            label="全部"
+            active={activeCategory === null}
+            onClick={() => selectCategory(null)}
           />
-        ))}
-      </motion.div>
+          {categories.map((category) => (
+            <FilterTab
+              key={category.id}
+              label={category.name}
+              active={activeCategory === category.slug}
+              onClick={() => selectCategory(category.slug)}
+            />
+          ))}
+        </nav>
+      )}
 
-      {/* 文章网格 */}
       {loading && posts.length === 0 ? (
-        <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+        <div className="flex min-h-72 items-center justify-center" role="status">
+          <Loader2 aria-hidden="true" className="h-7 w-7 animate-spin text-teal-600" />
+          <span className="sr-only">正在加载文章</span>
         </div>
       ) : posts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 text-slate-400">
-          <BookOpen className="w-12 h-12 mb-4 opacity-40" />
-          <p>暂无文章</p>
-        </div>
+        <section className="border-y border-slate-200 py-16 text-center dark:border-slate-700 md:py-24">
+          <BookOpen aria-hidden="true" className="mx-auto h-10 w-10 text-violet-500" />
+          <h2 className="mt-5 text-xl font-bold text-slate-950 dark:text-white">
+            内容正在整理
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl leading-7 text-slate-600 dark:text-slate-300">
+            这里会记录代码、灵感与成长，内容正在慢慢整理。
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/projects"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:bg-teal-500 dark:text-slate-950"
+            >
+              查看项目
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white/70 px-5 py-2.5 text-sm font-semibold text-slate-800 hover:border-violet-500 hover:text-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100"
+            >
+              <UserRound aria-hidden="true" className="h-4 w-4" />
+              关于我
+            </Link>
+          </div>
+        </section>
       ) : (
         <AnimatePresence mode="wait">
           <motion.div
@@ -121,87 +140,58 @@ export default function PostsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
+            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {posts.map((post, i) => (
-              <div key={post.id}>
-                <PostCard post={post} index={i} />
-              </div>
+            {posts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
             ))}
           </motion.div>
         </AnimatePresence>
       )}
 
-      {/* 加载更多 */}
       {hasMore && posts.length > 0 && !loading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex justify-center mt-10"
-        >
+        <div className="mt-10 flex justify-center">
           <button
             type="button"
             onClick={handleLoadMore}
-            className="px-5 py-2 md:px-8 md:py-3 rounded-2xl bg-white/10 dark:bg-white/[0.05] backdrop-blur-xl border border-white/20 text-sm md:text-base text-slate-700 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-white/[0.1] transition-all duration-300 hover:-translate-y-0.5"
+            className="min-h-11 rounded-md border border-slate-300 bg-white/70 px-6 py-2.5 text-sm font-semibold text-slate-800 hover:border-teal-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100"
           >
             加载更多
           </button>
-        </motion.div>
-      )}
-
-      {/* 加载中指示器（加载更多时） */}
-      {loading && posts.length > 0 && (
-        <div className="flex justify-center mt-10">
-          <Loader2 className="w-6 h-6 text-sky-500 animate-spin" />
         </div>
       )}
-    </div>
+
+      {loading && posts.length > 0 && (
+        <div className="mt-10 flex justify-center" role="status">
+          <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-teal-600" />
+          <span className="sr-only">正在加载更多文章</span>
+        </div>
+      )}
+    </main>
   );
 }
 
-/* ---------- 分类标签组件 ---------- */
-
 function FilterTab({
   label,
-  count,
   active,
   onClick,
 }: {
   label: string;
-  count: number | null;
   active: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
-      className={`relative px-3 py-1.5 md:px-5 md:py-2 rounded-2xl text-xs md:text-sm font-medium transition-all duration-300 ${
+      className={`min-h-10 rounded-md border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
         active
-          ? "text-white shadow-lg shadow-sky-500/20"
-          : "text-slate-600 dark:text-slate-400 bg-white/10 dark:bg-white/[0.05] backdrop-blur-xl border border-white/20 hover:bg-white/20 dark:hover:bg-white/[0.1]"
+          ? "border-teal-700 bg-teal-700 text-white dark:border-teal-400 dark:bg-teal-400 dark:text-slate-950"
+          : "border-slate-300 bg-white/70 text-slate-700 hover:border-teal-500 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-200"
       }`}
     >
-      {active && (
-        <motion.div
-          layoutId="activeCategoryBg"
-          className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-400"
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        />
-      )}
-      <span className="relative z-10">
-        {label}
-        {count !== null && count > 0 && (
-          <span
-            className={`ml-1.5 text-xs ${
-              active ? "text-white/70" : "text-slate-400 dark:text-slate-500"
-            }`}
-          >
-            {count}
-          </span>
-        )}
-      </span>
+      {label}
     </button>
   );
 }

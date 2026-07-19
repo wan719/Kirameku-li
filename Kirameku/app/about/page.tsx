@@ -1,165 +1,119 @@
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import rehypeHighlight from "rehype-highlight";
-import rehypeStringify from "rehype-stringify";
-import "highlight.js/styles/atom-one-dark.css";
-import { siteConfig } from "@/siteConfig";
-import FadeIn from "@/components/ui/FadeIn";
+import { BrainCircuit, Code2, ExternalLink, Sparkles } from "lucide-react";
 
-export default async function AboutPage() {
-  const fullPath = path.join(process.cwd(), "app", "about", "about.md");
-  let contentHtml = "博主很懒，还没有写自我介绍哦...";
-  let coverImage = "/images/2.webp";
+import AboutContactActions from "@/components/about/AboutContactActions";
+import { projectConfigs } from "@/config/projects";
+import { getVisibleStatusSnapshotItems, siteBrand } from "@/config/site";
 
-  try {
-    const fileContents = fs.readFileSync(fullPath, "utf8");
-    const { data, content } = matter(fileContents);
+const focusAreas = [
+  {
+    title: "Java 全栈",
+    description: "从服务端业务建模到前端交互，持续补齐可维护、可验证的完整工程链路。",
+  },
+  {
+    title: "AI 工程",
+    description: "关注 Agent、RAG 与真实业务场景的结合，也重视评估、边界和工程可靠性。",
+  },
+  {
+    title: "HarmonyOS",
+    description: "正在用 ArkTS 和 DevEco Studio 验证鸿蒙应用与 Agent 能力的最小闭环。",
+  },
+] as const;
 
-    if (data.cover) coverImage = data.cover;
-
-    const processedContent = await unified()
-      .use(remarkParse)
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeHighlight)
-      .use(rehypeStringify, { allowDangerousHtml: true })
-      .process(content);
-
-    contentHtml = processedContent.toString();
-  } catch (e) {
-    console.error("读取 about.md 失败", e);
-  }
+export default function AboutPage() {
+  const statusItems = getVisibleStatusSnapshotItems();
 
   return (
-    <FadeIn className="w-full max-w-4xl mx-auto py-6 md:py-12 px-4 sm:px-10 relative z-10">
-      <div className="bg-white/40 dark:bg-slate-800/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 dark:border-white/10 overflow-hidden transition-colors duration-700">
-
-        {/* 封面大图 */}
-        <div className="w-full h-36 md:h-64 relative bg-slate-200 dark:bg-slate-700 overflow-hidden group">
-          <img
-            src={coverImage}
-            alt="About Hero"
-            className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 md:py-16 lg:px-8">
+      <header className="max-w-3xl pb-12 md:pb-16">
+        <div className="mb-4 flex items-center gap-3 text-violet-700 dark:text-violet-300">
+          <Sparkles aria-hidden="true" className="h-6 w-6" />
+          <span className="text-sm font-semibold">关于我</span>
         </div>
+        <h1 className="text-3xl font-bold leading-tight text-slate-950 dark:text-white md:text-5xl">
+          你好，我是{siteBrand.nickname}。
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+          我喜欢把模糊的想法变成能运行、能验证、也能继续维护的东西。在代码、灵感与生活之间寻找共鸣，也认真记录每一次迭代。
+        </p>
+      </header>
 
-        <div className="px-4 md:px-16 pb-8 md:pb-16 relative">
-          {/* 头像 */}
-          <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-slate-800 shadow-2xl overflow-hidden -mt-12 md:-mt-16 relative z-20 bg-white">
-            <img
-              src={siteConfig.avatarUrl}
-              alt="avatar"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* 标题区 */}
-          <div className="mt-4 md:mt-6 mb-5 md:mb-8 border-b border-slate-300/50 dark:border-slate-700 pb-5 md:pb-8">
-            <h1 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2 md:mb-3 transition-colors duration-700">
-              关于我
-            </h1>
-            <p className="text-sm md:text-lg text-indigo-600 dark:text-indigo-400 font-bold tracking-widest uppercase transition-colors duration-700">
-              Hello World, I&apos;m {siteConfig.authorName}
-            </p>
-          </div>
-
-          {/* Markdown 正文 */}
-          <div className="relative">
-            <style>{`
-              .prose pre {
-                background-color: #282c34 !important;
-                color: #abb2bf !important;
-                padding: 1.25rem !important;
-                border-radius: 0.75rem !important;
-                overflow-x: auto !important;
-                box-shadow: inset 0 0 10px rgba(0,0,0,0.3) !important;
-                margin-top: 1.5rem !important;
-                margin-bottom: 1.5rem !important;
-              }
-              .prose pre code {
-                background-color: transparent !important;
-                padding: 0 !important;
-                color: inherit !important;
-                font-size: 0.9em !important;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-              }
-              .prose code::before, .prose code::after { content: none !important; }
-              .prose p code, .prose li code {
-                background-color: rgba(99, 102, 241, 0.1) !important;
-                color: #6366f1 !important;
-                padding: 0.2rem 0.4rem !important;
-                border-radius: 0.375rem !important;
-                font-weight: 600 !important;
-              }
-              .dark .prose p code, .dark .prose li code {
-                background-color: rgba(99, 102, 241, 0.2) !important;
-                color: #818cf8 !important;
-              }
-              .prose h2 {
-                font-size: 1.75rem !important;
-                font-weight: 800 !important;
-                margin-bottom: 1rem !important;
-                margin-top: 2.5rem !important;
-                color: inherit !important;
-              }
-              .prose h3 {
-                font-size: 1.25rem !important;
-                font-weight: 700 !important;
-                margin-bottom: 0.75rem !important;
-                color: inherit !important;
-              }
-              .prose p {
-                font-size: 1.05rem !important;
-                line-height: 1.85 !important;
-                color: inherit !important;
-              }
-              .prose ul {
-                list-style-type: disc !important;
-                padding-left: 1.5rem !important;
-              }
-              .prose blockquote {
-                border-left: 4px solid #6366f1 !important;
-                padding-left: 1rem !important;
-                margin: 1.5rem 0 !important;
-                color: #64748b !important;
-                font-style: italic !important;
-              }
-              .dark .prose blockquote {
-                color: #94a3b8 !important;
-              }
-              .prose img {
-                display: block !important;
-                margin: 2rem auto !important;
-                border-radius: 1.5rem !important;
-                box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
-                max-width: 100% !important;
-                height: auto !important;
-              }
-              .prose a {
-                color: #6366f1 !important;
-                text-decoration: underline !important;
-                text-underline-offset: 3px !important;
-              }
-              .dark .prose a {
-                color: #818cf8 !important;
-              }
-              .prose strong {
-                color: inherit !important;
-                font-weight: 700 !important;
-              }
-            `}</style>
-
-            <div
-              className="prose prose-sm md:prose-lg prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 transition-colors duration-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: contentHtml }}
-            />
-          </div>
+      <section className="border-t border-slate-200 py-12 dark:border-slate-700" aria-labelledby="identity-heading">
+        <h2 id="identity-heading" className="text-2xl font-bold text-slate-950 dark:text-white">
+          个人定位
+        </h2>
+        <p className="mt-4 max-w-3xl leading-8 text-slate-600 dark:text-slate-300">
+          {siteBrand.identity}。当前更关注真实问题中的工程判断：先建立可信的可运行基线，再让产品表达与技术能力一起生长。
+        </p>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {focusAreas.map((area) => (
+            <article key={area.title} className="rounded-lg border border-slate-200 bg-white/65 p-5 dark:border-slate-700 dark:bg-slate-900/50">
+              <Code2 aria-hidden="true" className="h-5 w-5 text-teal-700 dark:text-teal-300" />
+              <h3 className="mt-4 text-lg font-bold text-slate-950 dark:text-white">{area.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{area.description}</p>
+            </article>
+          ))}
         </div>
-      </div>
-    </FadeIn>
+      </section>
+
+      <section className="border-t border-slate-200 py-12 dark:border-slate-700" aria-labelledby="projects-heading">
+        <h2 id="projects-heading" className="text-2xl font-bold text-slate-950 dark:text-white">
+          三个代表项目
+        </h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {projectConfigs.map((project) => (
+            <article key={project.slug} className="rounded-lg border border-slate-200 bg-white/65 p-5 dark:border-slate-700 dark:bg-slate-900/50">
+              <p className="text-xs font-semibold text-violet-700 dark:text-violet-300">{project.statusLabel}</p>
+              <h3 className="mt-3 text-lg font-bold text-slate-950 dark:text-white">{project.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{project.summary}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-10 border-t border-slate-200 py-12 dark:border-slate-700 md:grid-cols-[1.2fr_0.8fr]" aria-labelledby="workflow-heading">
+        <div>
+          <BrainCircuit aria-hidden="true" className="h-6 w-6 text-amber-600 dark:text-amber-300" />
+          <h2 id="workflow-heading" className="mt-4 text-2xl font-bold text-slate-950 dark:text-white">
+            ChatGPT + Codex + Obsidian 工作流
+          </h2>
+          <p className="mt-4 leading-8 text-slate-600 dark:text-slate-300">
+            我用 ChatGPT 帮助澄清目标和复盘判断，用 Codex 在仓库中完成可验证的工程实施，再把长期有效的方法沉淀进 Obsidian。私人笔记始终保留在私有空间，只有经过审阅、适合公开的内容才会进入本站。
+          </p>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-950 dark:text-white">当前状态</h2>
+          <dl className="mt-5 space-y-4">
+            {statusItems.map((item) => (
+              <div key={item.key} className="border-l-2 border-teal-500 pl-4">
+                <dt className="text-xs font-semibold text-slate-500 dark:text-slate-400">{item.label}</dt>
+                <dd className="mt-1 text-sm leading-6 text-slate-800 dark:text-slate-100">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 py-12 dark:border-slate-700" aria-labelledby="contact-heading">
+        <h2 id="contact-heading" className="text-2xl font-bold text-slate-950 dark:text-white">
+          保持联系
+        </h2>
+        <p className="mt-4 max-w-2xl leading-8 text-slate-600 dark:text-slate-300">
+          欢迎通过 GitHub 了解我的公开项目，或用邮件交流工程实践与学习方法。
+        </p>
+        <AboutContactActions github={siteBrand.github} email={siteBrand.email} />
+
+        {siteBrand.resume.enabled && siteBrand.resume.url && (
+          <a
+            href={siteBrand.resume.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-slate-600 dark:text-slate-100"
+          >
+            查看简历
+            <ExternalLink aria-hidden="true" className="h-4 w-4" />
+          </a>
+        )}
+      </section>
+    </main>
   );
 }
