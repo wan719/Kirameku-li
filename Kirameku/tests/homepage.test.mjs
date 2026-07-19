@@ -53,7 +53,7 @@ test("backend failure falls back to no public content without legacy requests", 
   assert.equal(data.siteStats, null);
 });
 
-test("closed public posts never trigger article or legacy module requests", async () => {
+test("allowlisted posts remain visible while the global switch is closed", async () => {
   const calls = [];
   const data = await loadHomePageData(async (url) => {
     calls.push(url);
@@ -66,13 +66,26 @@ test("closed public posts never trigger article or legacy module requests", asyn
     if (url.endsWith("/api/visitors/count")) {
       return jsonResponse({ code: 0, count: 7, launchDate: null, runningDays: null });
     }
+    if (url.includes("/api/posts?")) {
+      return jsonResponse([
+        {
+          id: 1,
+          slug: "allowlisted-note",
+          title: "Allowlisted note",
+          description: "Visible through the shared backend predicate",
+          published_at: "2026-07-19T00:00:00",
+        },
+      ]);
+    }
     throw new Error(`unexpected request: ${url}`);
   }, "http://backend.invalid");
 
-  assert.deepEqual(data.posts, []);
+  assert.equal(data.posts.length, 1);
+  assert.equal(data.posts[0].slug, "allowlisted-note");
   assert.equal(data.siteStats?.count, 7);
   assert.deepEqual(calls, [
     "http://backend.invalid/api/site/public-config",
+    "http://backend.invalid/api/posts?status=published&page=1&size=3",
     "http://backend.invalid/api/visitors/count",
   ]);
   assert.ok(calls.every((url) => !/chatters|albums|music|site-config/.test(url)));

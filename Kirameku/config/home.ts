@@ -172,12 +172,10 @@ export async function loadHomePageData(
     };
   }
 
-  const postsPromise = publicConfig.contentVisibility.posts
-    ? readJson(
-        fetcher,
-        `${base}/api/posts?status=published&page=1&size=3`,
-      ).then(parsePosts).catch(() => [])
-    : Promise.resolve([] as HomePost[]);
+  const postsPromise = readJson(
+    fetcher,
+    `${base}/api/posts?status=published&page=1&size=3`,
+  ).then(parsePosts).catch(() => []);
   const statsPromise = readJson(fetcher, `${base}/api/visitors/count`)
     .then(parseSiteStats)
     .catch(() => null);
