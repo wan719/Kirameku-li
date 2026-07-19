@@ -458,3 +458,23 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | 直接访问 `/#/welcome` | 0 | 未登录状态被重定向到 `/#/login`，标题为 `登录 \| Kirameku · 晚`，认证没有弱化。 |
 
 由于没有读取或使用真实管理员凭据，也没有创建默认账号，本轮无法进入登录后的侧栏做浏览器截图；侧栏名称与 Logo 已由共享平台配置、`getLogo()` 源码断言、类型检查和生产构建验证，登录后视觉列入最终人工验收步骤。
+
+## 18. Task 14 README、上游署名和开发文档
+
+根 `README.md` 已从旧功能总览重写为第三阶段的实际开发入口。项目名称更新为 `Kirameku · 晚`，简介不再宣称“从零搭建”；重点项目只列 InternPilot、InternPilot HarmonyOS Agent 和 SecondBrain 的公开摘要，且不包含 SecondBrain 的仓库地址、本地路径或正文。公共页面说明与当前实现一致：主导航为首页、项目、文章和关于，动态与照片墙返回 404，历史数据和后台管理能力继续保留，音乐未配置时显示整理中状态。
+
+启动手册按“后端环境与数据库 → 管理后台构建 → 管理员交互创建 → FastAPI → 公共前台”给出 PowerShell 命令，包含 liveness/readiness、pnpm 11 冻结安装、后台挂载目录和无数据库时的安全边界。文档没有提供或暗示任何登录凭据，并明确 `.env` 只保留本地。
+
+环境说明覆盖 `PUBLIC_POSTS_ENABLED`、`PUBLIC_POST_SLUG_ALLOWLIST`、`PUBLIC_CHATTERS_ENABLED`、`PUBLIC_ALBUMS_ENABLED`、`PUBLIC_STATS_NAMESPACE` 与 `SITE_LAUNCH_DATE`。音乐歌单与简历开关当前不是环境变量，README 如实指向 `config/home.ts` 与 `config/site.ts`，没有虚构新的配置入口。草稿导入章节记录单文件读取、slug、幂等更新、已发布拒绝覆盖、始终保持 draft 和不输出私有路径的约束。
+
+README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://github.com/Xinghongia/Kirameku`，说明本仓库是 personalized fork and continued development，并保留 MIT `LICENSE` 与 pure-admin 生态署名。LICENSE、Git 历史和远程配置均未修改。
+
+### 18.1 文档验证
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `node --test docs/tests/phase3-readme.test.mjs`（实现前） | 1 | 1/5 通过；旧 README 的项目身份、公开策略、维护命令与上游署名四项按预期失败，私有路径约束已通过。 |
+| `node --test docs/tests/phase3-readme.test.mjs`（首次实现后） | 1 | 4/5 通过；唯一失败指出公开策略虽已列出 false 值，但缺少“默认关闭”的直接说明。 |
+| `node --test docs/tests/phase3-readme.test.mjs`（最终） | 0 | 5/5 通过：项目身份、三个重点项目、公开开关、管理员/草稿命令、上游署名、LICENSE 与 SecondBrain 隐私边界均受覆盖。 |
+| `git remote -v` | 0 | 确认实际上游为 `https://github.com/Xinghongia/Kirameku.git`，README 使用对应网页链接。 |
+| `git diff --check` | 0 | README 与文档测试无空白错误。 |

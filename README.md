@@ -1,209 +1,176 @@
-<div align="center">
+# Kirameku · 晚
 
-# Kirameku
+一个围绕代码、灵感与生活记录持续建设的个人站点。仓库包含 Next.js 公共前台、FastAPI API 与 Vue 3 管理后台；公共内容采用显式开启和白名单策略，数据库中的历史文章、动态、相册及统计仍由受保护的后台管理。
 
-**きらめく — 像星光一样闪烁**
+## 当前重点
 
-一个从零搭建的全栈个人博客系统，前端 Next.js，后端 FastAPI，附带 Vue 管理后台。
+| 项目 | 状态 | 说明 |
+|---|---|---|
+| InternPilot | 已上线 · 持续迭代 | 面向求职流程的 AI 辅助工作台，站内提供项目详情和公开源码入口。 |
+| InternPilot HarmonyOS Agent | 最小 Demo 验证中 | 在 DevEco / HarmonyOS 环境验证最小智能体交互链路，不代表完整产品。 |
+| SecondBrain | 文章整理中 | 私有知识工作流的公开摘要；仓库地址、文件路径和正文不对外提供。 |
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-![React](https://img.shields.io/badge/React-19-61dafb?logo=react)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
-![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vue.js)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06b6d4?logo=tailwindcss)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)
-![License](https://img.shields.io/badge/License-MIT-blue)
+公共导航固定为首页、项目、文章和关于。`/moments` 与 `/photowall` 当前返回 404；历史动态、照片及其后台管理能力没有删除。音乐能力保留但歌单为空时只显示“歌单整理中”。
 
-</div>
+## 技术结构
 
----
-
-## 项目结构
-
-```
+```text
 .
-├── Kirameku/                      # 前端（Next.js App Router）
-│   ├── app/                       # 页面路由
-│   │   ├── novel/                 # 小说阅读系统（书架 → 搜索 → 目录 → 阅读）
-│   │   ├── bookmark/              # 收藏夹（站点导航）
-│   │   ├── posts/                 # 文章系统
-│   │   ├── moments/               # 说说
-│   │   ├── friends/               # 友链（漂流瓶主题）
-│   │   └── ...                    # 更多页面
-│   ├── components/                # UI 组件
-│   │   ├── layout/                # 导航栏、页脚
-│   │   ├── providers/             # 主题、上下文
-│   │   └── ui/                    # 通用组件
-│   └── siteConfig.ts              # 站点全局配置
-│
-└── Kirameku-backend/              # 后端（FastAPI）
-    ├── app/
-    │   ├── api/                   # RESTful API 接口
-    │   ├── models/                # SQLModel 数据模型
-    │   ├── schemas/               # Pydantic 请求/响应模型
-    │   └── services/              # 业务逻辑层
-    ├── admin/                     # 管理后台（Vue 3 + Element Plus）
-    └── init_db.sql                # 数据库初始化脚本
+├── Kirameku/                 # Next.js 16 / React 19 公共前台
+│   ├── app/                  # App Router 页面与接口代理
+│   ├── components/           # 页面、布局与交互组件
+│   ├── config/               # 品牌、导航、首页、项目与主题配置
+│   └── public/brand/         # 第三阶段原创品牌与项目视觉
+├── Kirameku-backend/         # FastAPI / SQLModel / PostgreSQL
+│   ├── app/                  # API、模型、服务和维护命令
+│   ├── admin/                # Vue 3 / Vite / Element Plus 管理后台
+│   ├── init_db.sql           # 仅建表，不写入登录凭据
+│   └── DATABASE.md           # 数据模型与初始化说明
+├── docs/                     # 审计、设计与阶段执行记录
+└── LICENSE
 ```
 
-## 技术栈
+前台和管理后台统一使用 pnpm 11 与各自目录中的 `pnpm-lock.yaml`。不要生成或提交 npm、Yarn 锁文件。
 
-<table>
-<tr>
-<td width="50%" valign="top">
+## 本地启动
 
-**前端**
-- **Next.js 16** + **React 19** — App Router，SSR/SSG
-- **Tailwind CSS 4** — 原子化样式
-- **Framer Motion** — 页面过渡与微交互
-- **TypeScript** — 类型安全
-- **Live2D** — 看板娘，右下角可互动
+已验证的开发基线为 Node.js `24.15.0`、pnpm `11.9.0`、Python `3.9.1` 和 PostgreSQL 14+。下面以 PowerShell 为例；所有 `.env` 都只保留在本机。
 
-</td>
-<td width="50%" valign="top">
+### 1. 准备后端
 
-**后端**
-- **FastAPI** — 高性能 Python Web 框架
-- **SQLModel** — ORM（SQLAlchemy + Pydantic）
-- **PostgreSQL** — 关系型数据库
-- **阿里云 OSS** — 图片对象存储
-- **JWT** — 身份认证
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-**管理后台**
-- **Vue 3** + **Element Plus** — 后台 UI
-- **Pure Admin** — 管理后台模板
-- 内嵌于后端，无需单独部署
-
-</td>
-<td width="50%" valign="top">
-
-**阅读服务**
-- **reader-master** — Kotlin/Spring Boot
-- legado 书源兼容
-- 独立部署，端口 8085
-
-</td>
-</tr>
-</table>
-
-## 功能模块
-
-### 博客前台
-
-| 模块 | 路径 | 描述 |
-|:-----|:-----|:-----|
-| 首页 | `/` | 文章预览、说说、照片墙，一站式入口 |
-| 文章 | `/posts` | 分类筛选、标签、Markdown 渲染、代码高亮 |
-| 说说 | `/moments` | 碎片化记录，类朋友圈时间线 |
-| 杂谈 | `/messages` | 轻量话题讨论区 |
-| 小说 | `/novel` | 书架 → 搜索 → 目录 → 阅读，完整阅读体验 |
-| 收藏夹 | `/bookmark` | 站点导航，分类管理，平台标签，自动获取 favicon |
-| 项目 | `/projects` | 个人项目展示，支持搜索，GitHub/Gitee 链接 |
-| 友链 | `/friends` | 漂流瓶主题，可拖动交互 |
-| 照片墙 | `/photowall` | 相册瀑布流展示 |
-| 归档 | `/timeline` | 时间河流可视化，拖动浏览全部文章 |
-| 音乐 | `/music` | 云音乐播放器，支持歌单 |
-| 关于 | `/about` | 关于博主 |
-
-### 管理后台
-
-文章、分类、标签、评论、留言、说说、相册、项目、友链、收藏夹、站点配置 — 全部可视化管理，支持图片压缩上传至阿里云 OSS。
-
-## 快速开始
-
-实测开发环境基线：Node.js `24.15.0`、pnpm `11.9.0`、Python `3.9.1`。前台和管理后台统一使用 pnpm，仓库中的 `pnpm-lock.yaml` 是唯一 JavaScript 依赖锁文件。
-
-### 1. 后端
-
-```bash
+```powershell
 cd Kirameku-backend
-
-# 创建虚拟环境
 python -m venv venv
-source venv/bin/activate          # Mac/Linux
-# venv\Scripts\activate           # Windows
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env，至少填写数据库连接和应用密钥
-# OSS 为可选配置，未配置时仅图片上传接口返回 503
-
-# 初始化数据库
-psql -U postgres -d your_db -f init_db.sql
-
-# 打包管理后台
-cd admin && pnpm install --frozen-lockfile && pnpm build && cd ..
-
-# 启动
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
 
-API 文档：`http://localhost:8000/docs`
-管理后台：`http://localhost:8000/admin`
+编辑本地 `.env`，至少设置可用的 `DATABASE_URL` 和随机生成的 `SECRET_KEY`。OSS、GitHub OAuth 与 reader 服务均可按需配置；OSS 留空不会阻止 FastAPI 启动，只会使上传接口不可用。
 
-`GET /api/health` 是不访问数据库或 OSS 的 liveness 检查；`GET /api/health/ready` 会用 `SELECT 1` 检查 PostgreSQL readiness。数据库未启动时，应用、liveness、API 文档和 OpenAPI 仍可访问，readiness 返回 503，依赖数据库的业务接口不可用。
+初始化空数据库：
 
-### 2. 前端
+```powershell
+psql -d <database-name> -f init_db.sql
+```
 
-```bash
+仓库不内置登录凭据。首次初始化后，交互创建管理员：
+
+```powershell
+python -m app.scripts.create_admin
+```
+
+命令会隐藏输入两次密码，不接受密码命令行参数，也不会输出密码或哈希。完整说明见 [`Kirameku-backend/DATABASE.md`](Kirameku-backend/DATABASE.md)。
+
+### 2. 构建管理后台
+
+FastAPI 从 `Kirameku-backend/admin/dist` 挂载 `/admin`，因此首次启动前先构建后台：
+
+```powershell
+cd admin
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm build
+cd ..
+```
+
+单独开发后台时运行 `pnpm dev`；未登录访问业务路由会跳转到登录页。
+
+### 3. 启动 FastAPI
+
+```powershell
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+- API 文档：`http://127.0.0.1:8000/docs`
+- 管理后台：`http://127.0.0.1:8000/admin`
+- Liveness：`GET /api/health`
+- Readiness：`GET /api/health/ready`
+
+`/api/health` 不访问数据库或 OSS。数据库不可用时 FastAPI、文档和 liveness 仍可启动，readiness 会安全返回 503，依赖数据库的业务接口不可用。
+
+### 4. 启动公共前台
+
+另开一个终端：
+
+```powershell
 cd Kirameku
-
 pnpm install --frozen-lockfile
 pnpm dev --hostname 127.0.0.1 --port 3000
-
-# 部署
-pnpm build && pnpm start
 ```
 
-### 3. 阅读服务（可选）
+生产构建与本地启动验证：
 
-```bash
-# reader-master 独立部署
-java -jar reader-master.jar
-# 默认端口 8085，前端通过 /reader3/ 路径代理访问
+```powershell
+pnpm exec tsc --noEmit
+pnpm build
+pnpm start --hostname 127.0.0.1 --port 3000
 ```
 
-## 环境变量
+前台通过 `NEXT_PUBLIC_API_URL` 访问 FastAPI。后端暂不可用时，首页、文章页和站点统计使用安全空状态，不回退展示历史内容。
 
-`Kirameku-backend/.env`：
+## 公开内容策略
 
-```env
-# 数据库
-DATABASE_URL=postgresql://user:password@host:5432/dbname
+所有历史数据继续保存在数据库中。文章、动态和相册默认关闭；是否公开由后端执行，前端隐藏不是访问控制：
 
-# JWT
-SECRET_KEY=your-secret-key
+| 变量 | 初始策略 | 作用 |
+|---|---|---|
+| `PUBLIC_POSTS_ENABLED` | `false` | 文章公共列表与详情总开关。 |
+| `PUBLIC_POST_SLUG_ALLOWLIST` | 空 | 开启文章后仍只公开显式列出的 slug；多个值用逗号分隔。 |
+| `PUBLIC_CHATTERS_ENABLED` | `false` | 动态公共接口开关；当前公共页面入口同时关闭。 |
+| `PUBLIC_ALBUMS_ENABLED` | `false` | 相册公共接口开关；当前公共页面入口同时关闭。 |
+| `PUBLIC_STATS_NAMESPACE` | `kirameku-wan-v1` | 新站访问统计命名空间，与历史统计隔离。 |
+| `SITE_LAUNCH_DATE` | 空 | 可选 ISO 日期 `YYYY-MM-DD`；为空时前台不显示运行天数。 |
 
-# 默认 false；仅本地开发需要自动建表时设为 true
-AUTO_CREATE_TABLES=false
+关闭的列表返回空结果，非公开详情统一返回 404。管理员接口仍要求有效 Token 和管理员身份，并可继续管理历史内容。
 
-# 阿里云 OSS（可选，完整变量见 .env.example）
-OSS_ACCESS_KEY_ID=
-OSS_ACCESS_KEY_SECRET=
-OSS_ENDPOINT=
-OSS_BUCKET_NAME=
+## 其他配置
+
+后端完整变量模板位于 `Kirameku-backend/.env.example`，包括数据库、应用密钥、CORS、公共内容开关、GitHub OAuth 和可选 OSS。前台模板位于 `Kirameku/.env.example`，主要包含 API 与可选 reader 地址。不要提交填有真实值的 `.env`。
+
+音乐歌单目前不是环境变量，而是在 `Kirameku/config/home.ts` 的 `musicConfig.playlistId` / `songIds` 中配置；两者为空时不会请求旧歌单接口。简历入口位于 `Kirameku/config/site.ts`，只有 `resume.enabled` 为 `true` 且存在有效 URL 时才渲染。
+
+## 内容维护
+
+将单个本地 Markdown 文件导入为草稿：
+
+```powershell
+cd Kirameku-backend
+python -m app.scripts.import_post_draft "<markdown-file>"
 ```
 
-## 设计亮点
+Front Matter 必须提供合法 `slug`；标题可来自 `title` 或正文第一个一级标题。同一 slug 再次导入会更新原草稿，已发布文章拒绝覆盖，导入结果始终保持 `draft`。命令只读取显式传入的文件，不扫描目录，不复制源文件，也不输出正文或私有路径。
 
-- **Glassmorphism 风格** — 全站毛玻璃质感，亮色暗色双主题
-- **微交互动画** — Framer Motion 驱动，页面过渡、卡片悬停、果冻弹跳
-- **小说阅读系统** — 四级路由架构（书架/搜索/目录/阅读），SSE 流式搜索，阅读设置持久化
-- **收藏夹** — 自动获取站点 favicon，平台标签，搜索过滤
-- **漂流瓶友链** — 可拖动的漂浮瓶子，点击查看详情
-- **时间河流** — 归档页的可视化时间线，拖动交互
-- **Live2D 看板娘** — 右下角可互动，连续点击 Logo 7 次触发彩蛋
-- **移动端适配** — 响应式布局，移动端导航菜单
+## 验证入口
+
+```powershell
+# 后端
+cd Kirameku-backend
+venv\Scripts\python.exe -m unittest discover -s tests -v
+venv\Scripts\python.exe -m compileall -q app tests
+
+# 公共前台
+cd ..\Kirameku
+pnpm exec tsc --noEmit
+pnpm build
+
+# 管理后台
+cd ..\Kirameku-backend\admin
+pnpm test:brand
+pnpm typecheck
+pnpm build
+```
+
+第三阶段的完整命令、退出码、访问控制矩阵与人工验收步骤记录在 [`docs/03-original-author-cleanup-and-basic-personalization-report.md`](docs/03-original-author-cleanup-and-basic-personalization-report.md)。
+
+## Upstream attribution
+
+Kirameku-li is a personalized fork and continued development of Kirameku. The original license and upstream attribution are preserved.
+
+Upstream repository: [Xinghongia/Kirameku](https://github.com/Xinghongia/Kirameku)
+
+The Vue administration interface continues to use and credit the [pure-admin](https://github.com/pure-admin/vue-pure-admin) ecosystem. See [`LICENSE`](LICENSE) and package metadata for applicable notices and dependency licenses.
 
 ## License
 
-MIT
+This repository preserves the upstream MIT license. See [`LICENSE`](LICENSE).
