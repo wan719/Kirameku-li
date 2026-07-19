@@ -56,7 +56,7 @@ export const getChatterCount = (status?: string) => {
 
 /** 获取说说详情 */
 export const getChatterById = (chatterId: number) => {
-  return http.request<ChatterItem>("get", `/api/chatters/${chatterId}`);
+  return http.request<ChatterItem>("get", `/api/chatters/admin/${chatterId}`);
 };
 
 /** 获取说说评论（公开） */

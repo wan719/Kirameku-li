@@ -9,7 +9,7 @@ export type TagItem = {
 
 /** 获取标签列表 */
 export const getTags = () => {
-  return http.request<TagItem[]>("get", "/api/tags");
+  return http.request<TagItem[]>("get", "/api/tags/admin");
 };
 
 /** 创建标签 */

@@ -23,7 +23,7 @@ export type PhotoItem = {
 
 /** 获取相册列表 */
 export const getAlbums = () => {
-  return http.request<AlbumItem[]>("get", "/api/albums");
+  return http.request<AlbumItem[]>("get", "/api/albums/admin");
 };
 
 /** 创建相册 */
@@ -51,7 +51,10 @@ export const deleteAlbum = (albumId: number) => {
 
 /** 获取相册照片列表 */
 export const getAlbumPhotos = (albumId: number) => {
-  return http.request<PhotoItem[]>("get", `/api/albums/${albumId}/photos`);
+  return http.request<PhotoItem[]>(
+    "get",
+    `/api/albums/admin/${albumId}/photos`
+  );
 };
 
 /** 添加照片 */

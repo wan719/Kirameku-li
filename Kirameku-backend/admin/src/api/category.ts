@@ -13,7 +13,7 @@ export type CategoryItem = {
 
 /** 获取分类列表 */
 export const getCategories = () => {
-  return http.request<CategoryItem[]>("get", "/api/categories");
+  return http.request<CategoryItem[]>("get", "/api/categories/admin");
 };
 
 /** 创建分类 */
@@ -31,7 +31,9 @@ export const updateCategory = (
   catId: number,
   data: { name?: string; slug?: string; description?: string; sort?: number }
 ) => {
-  return http.request<CategoryItem>("put", `/api/categories/${catId}`, { data });
+  return http.request<CategoryItem>("put", `/api/categories/${catId}`, {
+    data
+  });
 };
 
 /** 删除分类 */

@@ -5,6 +5,8 @@ from fastapi import HTTPException
 
 from app.models import Comment, GitHubUser
 from app.schemas import CommentCreate
+from app.public_site import PublicSiteSettings
+from app.services import post_service
 
 
 def _comment_to_dict(session: Session, c: Comment, include_ip: bool = False, fetch_replies: bool = False) -> dict:
@@ -88,7 +90,7 @@ def create_comment(
 
     if data.parent_id:
         parent = session.get(Comment, data.parent_id)
-        if not parent:
+        if not parent or parent.post_id != data.post_id:
             raise HTTPException(404, "被回复的评论不存在")
 
     comment = Comment(
@@ -124,6 +126,19 @@ def toggle_comment_like(session: Session, comment_id: int, unlike: bool = False)
     session.commit()
     session.refresh(c)
     return _comment_to_dict(session, c)
+
+
+def toggle_public_comment_like(
+    session: Session,
+    comment_id: int,
+    settings: PublicSiteSettings,
+    unlike: bool = False,
+) -> dict:
+    comment = session.get(Comment, comment_id)
+    if not comment:
+        raise HTTPException(404, "评论不存在")
+    post_service.require_public_post_by_id(session, comment.post_id, settings)
+    return toggle_comment_like(session, comment_id, unlike)
 
 
 def delete_comment(session: Session, comment_id: int):

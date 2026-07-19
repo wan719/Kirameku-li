@@ -56,3 +56,7 @@ def load_public_site_settings(environ: Mapping[str, str]) -> PublicSiteSettings:
 
 
 PUBLIC_SITE_SETTINGS = load_public_site_settings(os.environ)
+
+
+def get_public_site_settings() -> PublicSiteSettings:
+    return PUBLIC_SITE_SETTINGS

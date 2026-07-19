@@ -7,6 +7,8 @@ from fastapi import HTTPException
 
 from app.models import Chatter, ChatterComment, GitHubUser
 from app.schemas import ChatterCreate, ChatterUpdate, ChatterCommentCreate
+from app.content_visibility import require_chatters_public
+from app.public_site import PublicSiteSettings
 
 
 def _comment_to_dict(session: Session, c: ChatterComment, include_ip: bool = False, fetch_replies: bool = False) -> dict:
@@ -84,6 +86,16 @@ def get_chatter_by_id(session: Session, chatter_id: int) -> dict:
         "created_at": c.created_at,
         "updated_at": c.updated_at,
     }
+
+
+def get_public_chatter_by_id(
+    session: Session, chatter_id: int, settings: PublicSiteSettings
+) -> dict:
+    require_chatters_public(settings)
+    chatter = session.get(Chatter, chatter_id)
+    if not chatter or chatter.status != "published":
+        raise HTTPException(status_code=404, detail="说说不存在")
+    return get_chatter_by_id(session, chatter_id)
 
 
 def create_chatter(session: Session, data: ChatterCreate) -> dict:
@@ -247,3 +259,17 @@ def toggle_comment_like(session: Session, comment_id: int, unlike: bool = False)
     session.commit()
     session.refresh(c)
     return _comment_to_dict(session, c)
+
+
+def toggle_public_comment_like(
+    session: Session,
+    comment_id: int,
+    settings: PublicSiteSettings,
+    unlike: bool = False,
+) -> dict:
+    require_chatters_public(settings)
+    comment = session.get(ChatterComment, comment_id)
+    if not comment:
+        raise HTTPException(404, "评论不存在")
+    get_public_chatter_by_id(session, comment.chatter_id, settings)
+    return toggle_comment_like(session, comment_id, unlike)

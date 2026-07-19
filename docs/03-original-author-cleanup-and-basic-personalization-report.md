@@ -141,3 +141,42 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `venv\Scripts\python.exe -m compileall -q app tests` | 0 | 后端应用与测试模块均可编译。 |
 
 以上测试均显式设置 `PYTHON_DOTENV_DISABLED=1`、测试专用数据库 URL 和测试专用密钥，未读取真实凭据。
+
+## 7. Task 3 统一公共内容访问控制
+
+新增 `Kirameku-backend/app/content_visibility.py`，以 `is_post_public(post, settings)` 作为文章公开性的唯一对象级判断入口：非 `published` 永不公开；显式启用文章模块时公开已发布文章；未启用时仅公开 allowlist 命中且已发布的文章。公共列表先完成统一判断再分页，查询参数中的 `status` 不能绕过规则。
+
+### 7.1 已收敛的真实公共出口
+
+| 内容 | 公共行为 | 管理行为 |
+|---|---|---|
+| 文章列表、分页、分类筛选、标签筛选、首页最新文章、RSS | 复用受控 `GET /api/posts`；默认返回空集合。 | 新增鉴权 `GET /api/posts/admin`。 |
+| 文章计数与首页 Dashboard | `GET /api/posts/count` 只统计公开文章。 | 新增鉴权 `GET /api/posts/admin/count`，保留完整状态统计。 |
+| 文章详情、页面 metadata 数据源 | `GET /api/posts/{slug}` 对不存在和非公开文章统一返回 404。 | 新增鉴权的 `/api/posts/admin/detail/{post_id}` 与 `/api/posts/admin/slug/{slug}`；旧 `/detail/{post_id}` 同样增加管理员鉴权以阻断直读。 |
+| 文章点赞 | 按文章 ID 操作前复用公开性判断，非公开文章返回 404。 | 文章创建、更新、删除接口保持原管理员鉴权。 |
+| 文章评论 | 评论列表、创建、点赞/取消点赞均先验证关联文章公开性；关闭态返回 404，回复目标还必须属于同一文章。 | 既有评论审核、状态更新和删除接口保持管理员鉴权。 |
+| 分类与标签 | 只返回至少含一篇公开文章的项，`post_count` 由公开文章实时重算。 | 新增鉴权 `/api/categories/admin`、`/api/tags/admin`，保留完整历史集合与存储计数。 |
+| 动态 | 关闭时列表为空、计数为 0，详情、评论读取/创建、动态与评论点赞均返回 404；启用时仍只读取 `published`。 | 既有 `/api/chatters/admin` 保留，并新增鉴权详情 `/api/chatters/admin/{chatter_id}`。 |
+| 相册 | 关闭时列表为空，详情和照片列表返回 404；启用时行为保持。 | 新增鉴权 `/api/albums/admin`、详情和照片读取端点。 |
+
+管理后台五个 API 客户端已切换到对应 `/admin` 读取路径。公共前台无需复制可见性条件：文章页、首页、花园页、时间线、动态页、相册页和 RSS 都继续调用受控公共 API。仓库不存在 sitemap、文章搜索建议接口、独立分类/标签页面或相关文章接口，因此按任务约束未新建这些功能。
+
+### 7.2 测试与数据保护
+
+新增测试使用内存 SQLite 构造 published、draft、allowlist 命中/未命中以及历史动态、相册数据；测试结束后销毁内存数据库。没有连接、迁移、覆盖或删除现有 PostgreSQL 数据。
+
+| 命令 | 退出码 | 结果 |
+|---|---:|---|
+| `venv\Scripts\python.exe -m unittest tests.test_public_content_visibility -v`（实现前） | 1 | 8 项按预期失败：统一可见性模块与设置依赖缺失。 |
+| `venv\Scripts\python.exe -m unittest tests.test_public_content_visibility -v`（核心实现后） | 0 | 8/8 通过。 |
+| `venv\Scripts\python.exe -m unittest tests.test_public_content_visibility -v`（边界补全后） | 0 | 最终 15/15 通过，包含评论旁路与无 Token 管理读取 401 用例。 |
+| `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 最终 30/30 通过，包含 15 项 Task 3 内容与鉴权回归。 |
+| `venv\Scripts\python.exe -m compileall -q app tests` | 0 | Task 3 后端源码与测试均可编译。 |
+| `pnpm typecheck` | 0 | 管理后台 API 路径变更类型检查通过。 |
+| `pnpm build`（管理后台） | 0 | Vite 生产构建通过，3349 模块。 |
+| `pnpm exec eslint --max-warnings 0 src/api/album.ts src/api/category.ts src/api/chatter.ts src/api/post.ts src/api/tag.ts`（格式化前） | 1 | 仅 19 个 CRLF/Prettier 格式项，无行为或类型错误。 |
+| `pnpm exec prettier --write ...` | 0 | 只格式化本任务修改的五个管理后台 API 文件。 |
+| 同一条定向 ESLint（格式化后） | 0 | 本任务修改的管理后台文件 0 errors、0 warnings。 |
+| `pnpm build`（公共前台） | 0 | 39 个路由构建成功；后端未启动时 RSS 保留既知非阻塞 `ECONNREFUSED` 日志。 |
+
+人工脚本对 10 个新增管理读取 URL 进行了无 Token 请求，均返回 401；该行为随后加入自动化回归测试。未读取本地 `.env`，未写入真实 Token、密码或数据库凭据。

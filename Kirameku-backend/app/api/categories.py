@@ -5,12 +5,24 @@ from app.deps import get_session
 from app.schemas import CategoryCreate, CategoryUpdate, CategoryOut
 from app.services import category_service
 from app.deps import get_current_user
+from app.public_site import PublicSiteSettings, get_public_site_settings
 
 router = APIRouter(prefix="/api/categories", tags=["分类"])
 
 
 @router.get("", response_model=list[CategoryOut])
-def list_categories(session: Session = Depends(get_session)):
+def list_categories(
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return category_service.get_public_categories(session, settings)
+
+
+@router.get("/admin", response_model=list[CategoryOut])
+def admin_list_categories(
+    session: Session = Depends(get_session),
+    _: dict = Depends(get_current_user),
+):
     return category_service.get_categories(session)
 
 

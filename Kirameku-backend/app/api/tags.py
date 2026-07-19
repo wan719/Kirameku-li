@@ -5,12 +5,24 @@ from app.deps import get_session
 from app.schemas import TagCreate, TagUpdate, TagOut
 from app.services import tag_service
 from app.deps import get_current_user
+from app.public_site import PublicSiteSettings, get_public_site_settings
 
 router = APIRouter(prefix="/api/tags", tags=["标签"])
 
 
 @router.get("", response_model=list[TagOut])
-def list_tags(session: Session = Depends(get_session)):
+def list_tags(
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return tag_service.get_public_tags(session, settings)
+
+
+@router.get("/admin", response_model=list[TagOut])
+def admin_list_tags(
+    session: Session = Depends(get_session),
+    _: dict = Depends(get_current_user),
+):
     return tag_service.get_tags(session)
 
 

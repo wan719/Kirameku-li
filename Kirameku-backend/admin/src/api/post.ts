@@ -29,22 +29,24 @@ export const getPosts = (params?: {
   page?: number;
   size?: number;
 }) => {
-  return http.request<PostItem[]>("get", "/api/posts", { params });
+  return http.request<PostItem[]>("get", "/api/posts/admin", { params });
 };
 
 /** 获取文章数量 */
 export const getPostCount = (params?: { status?: string }) => {
-  return http.request<{ count: number }>("get", "/api/posts/count", { params });
+  return http.request<{ count: number }>("get", "/api/posts/admin/count", {
+    params
+  });
 };
 
 /** 获取文章详情（按 slug，会增加浏览量） */
 export const getPostBySlug = (slug: string) => {
-  return http.request<PostDetail>("get", `/api/posts/${slug}`);
+  return http.request<PostDetail>("get", `/api/posts/admin/slug/${slug}`);
 };
 
 /** 获取文章详情（按 ID，编辑用） */
 export const getPostById = (postId: number) => {
-  return http.request<PostDetail>("get", `/api/posts/detail/${postId}`);
+  return http.request<PostDetail>("get", `/api/posts/admin/detail/${postId}`);
 };
 
 /** 创建文章 */

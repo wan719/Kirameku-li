@@ -12,6 +12,7 @@ from app.schemas.comment import CommentAdminUpdate
 from app.services import chatter_service
 from app.deps import get_current_user
 from app.api.github_auth import get_github_user_optional
+from app.public_site import PublicSiteSettings, get_public_site_settings
 
 router = APIRouter(prefix="/api/chatters", tags=["说说"])
 
@@ -23,7 +24,10 @@ def list_chatters(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=200),
     session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
 ):
+    if not settings.public_chatters_enabled:
+        return []
     return chatter_service.get_chatters(session, "published", page, size)
 
 
@@ -31,14 +35,20 @@ def list_chatters(
 def chatter_count(
     status: str = "published",
     session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
 ):
-    return {"count": chatter_service.count_chatters(session, status)}
+    if not settings.public_chatters_enabled:
+        return {"count": 0}
+    return {"count": chatter_service.count_chatters(session, "published")}
 
 
 @router.get("/{chatter_id}/comments", response_model=list[ChatterCommentOut])
 def get_chatter_comments(
-    chatter_id: int, session: Session = Depends(get_session)
+    chatter_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
 ):
+    chatter_service.get_public_chatter_by_id(session, chatter_id, settings)
     return chatter_service.get_chatter_comments(session, chatter_id)
 
 
@@ -47,7 +57,9 @@ def create_chatter_comment(
     data: ChatterCommentCreate,
     request: Request,
     session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
 ):
+    chatter_service.get_public_chatter_by_id(session, data.chatter_id, settings)
     user = get_github_user_optional(request, session)
     ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
     if not ip:
@@ -68,6 +80,15 @@ def admin_list_chatters(
     _: dict = Depends(get_current_user),
 ):
     return chatter_service.get_chatters(session, status, page, size)
+
+
+@router.get("/admin/{chatter_id}", response_model=ChatterOut)
+def admin_get_chatter(
+    chatter_id: int,
+    session: Session = Depends(get_session),
+    _: dict = Depends(get_current_user),
+):
+    return chatter_service.get_chatter_by_id(session, chatter_id)
 
 
 @router.post("", response_model=ChatterOut)
@@ -113,29 +134,55 @@ def delete_chatter_comment(
 
 
 @router.post("/comments/{comment_id}/like", response_model=ChatterCommentOut)
-def like_chatter_comment(comment_id: int, session: Session = Depends(get_session)):
-    return chatter_service.toggle_comment_like(session, comment_id, unlike=False)
+def like_chatter_comment(
+    comment_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return chatter_service.toggle_public_comment_like(
+        session, comment_id, settings, unlike=False
+    )
 
 
 @router.post("/comments/{comment_id}/unlike", response_model=ChatterCommentOut)
-def unlike_chatter_comment(comment_id: int, session: Session = Depends(get_session)):
-    return chatter_service.toggle_comment_like(session, comment_id, unlike=True)
+def unlike_chatter_comment(
+    comment_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return chatter_service.toggle_public_comment_like(
+        session, comment_id, settings, unlike=True
+    )
 
 
 # ---- 动态路由 ----
 
 @router.get("/{chatter_id}", response_model=ChatterOut)
-def get_chatter(chatter_id: int, session: Session = Depends(get_session)):
-    return chatter_service.get_chatter_by_id(session, chatter_id)
+def get_chatter(
+    chatter_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return chatter_service.get_public_chatter_by_id(session, chatter_id, settings)
 
 
 @router.post("/{chatter_id}/like")
-def like_chatter(chatter_id: int, session: Session = Depends(get_session)):
+def like_chatter(
+    chatter_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    chatter_service.get_public_chatter_by_id(session, chatter_id, settings)
     return chatter_service.toggle_like(session, chatter_id, unlike=False)
 
 
 @router.post("/{chatter_id}/unlike")
-def unlike_chatter(chatter_id: int, session: Session = Depends(get_session)):
+def unlike_chatter(
+    chatter_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    chatter_service.get_public_chatter_by_id(session, chatter_id, settings)
     return chatter_service.toggle_like(session, chatter_id, unlike=True)
 
 

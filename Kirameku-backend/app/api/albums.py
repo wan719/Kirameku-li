@@ -5,22 +5,67 @@ from app.deps import get_session
 from app.schemas import AlbumCreate, AlbumUpdate, AlbumOut, PhotoCreate, PhotoOut
 from app.services import album_service
 from app.deps import get_current_user
+from app.content_visibility import require_albums_public
+from app.public_site import PublicSiteSettings, get_public_site_settings
 
 router = APIRouter(prefix="/api/albums", tags=["相册"])
 
 
 @router.get("", response_model=list[AlbumOut])
-def list_albums(session: Session = Depends(get_session)):
+def list_albums(
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    if not settings.public_albums_enabled:
+        return []
     return album_service.get_albums(session)
 
 
+@router.get("/admin", response_model=list[AlbumOut])
+def admin_list_albums(
+    session: Session = Depends(get_session),
+    _: dict = Depends(get_current_user),
+):
+    return album_service.get_albums(session)
+
+
+@router.get("/admin/{album_id}/photos", response_model=list[PhotoOut])
+def admin_get_album_photos(
+    album_id: int,
+    session: Session = Depends(get_session),
+    _: dict = Depends(get_current_user),
+):
+    album_service.get_album_by_id(session, album_id)
+    return album_service.get_photos(session, album_id)
+
+
+@router.get("/admin/{album_id}", response_model=AlbumOut)
+def admin_get_album(
+    album_id: int,
+    session: Session = Depends(get_session),
+    _: dict = Depends(get_current_user),
+):
+    return album_service.get_album_by_id(session, album_id)
+
+
 @router.get("/{album_id}", response_model=AlbumOut)
-def get_album(album_id: int, session: Session = Depends(get_session)):
+def get_album(
+    album_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    require_albums_public(settings)
     return album_service.get_album_by_id(session, album_id)
 
 
 @router.get("/{album_id}/photos", response_model=list[PhotoOut])
-def get_album_photos(album_id: int, session: Session = Depends(get_session)):
+def get_album_photos(
+    album_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    require_albums_public(settings)
+    album_service.get_album_by_id(session, album_id)
     return album_service.get_photos(session, album_id)
 
 

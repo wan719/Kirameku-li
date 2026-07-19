@@ -8,6 +8,8 @@ from app.schemas import CommentCreate, CommentOut, CommentAdminUpdate
 from app.services import comment_service
 from app.deps import get_current_user
 from app.api.github_auth import get_github_user_optional
+from app.public_site import PublicSiteSettings, get_public_site_settings
+from app.services import post_service
 
 router = APIRouter(prefix="/api/comments", tags=["评论"])
 
@@ -15,7 +17,12 @@ router = APIRouter(prefix="/api/comments", tags=["评论"])
 # ---- 公开接口 ----
 
 @router.get("/post/{post_id}", response_model=list[CommentOut])
-def get_post_comments(post_id: int, session: Session = Depends(get_session)):
+def get_post_comments(
+    post_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    post_service.require_public_post_by_id(session, post_id, settings)
     return comment_service.get_comments_by_post(session, post_id)
 
 
@@ -24,7 +31,9 @@ def create_comment(
     data: CommentCreate,
     request: Request,
     session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
 ):
+    post_service.require_public_post_by_id(session, data.post_id, settings)
     user = get_github_user_optional(request, session)
     ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
     if not ip:
@@ -58,13 +67,25 @@ def update_comment_status(
 
 
 @router.post("/{comment_id}/like", response_model=CommentOut)
-def like_comment(comment_id: int, session: Session = Depends(get_session)):
-    return comment_service.toggle_comment_like(session, comment_id, unlike=False)
+def like_comment(
+    comment_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return comment_service.toggle_public_comment_like(
+        session, comment_id, settings, unlike=False
+    )
 
 
 @router.post("/{comment_id}/unlike", response_model=CommentOut)
-def unlike_comment(comment_id: int, session: Session = Depends(get_session)):
-    return comment_service.toggle_comment_like(session, comment_id, unlike=True)
+def unlike_comment(
+    comment_id: int,
+    session: Session = Depends(get_session),
+    settings: PublicSiteSettings = Depends(get_public_site_settings),
+):
+    return comment_service.toggle_public_comment_like(
+        session, comment_id, settings, unlike=True
+    )
 
 
 @router.delete("/{comment_id}")

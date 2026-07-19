@@ -6,6 +6,8 @@ from sqlmodel import Session, select, func
 from fastapi import HTTPException
 
 from app.models import Post, Category, Tag, PostTag
+from app.content_visibility import is_post_public
+from app.public_site import PublicSiteSettings
 from app.schemas import PostCreate, PostUpdate
 
 
@@ -122,9 +124,60 @@ def get_posts(
     return [_post_to_dict(p, session) for p in posts]
 
 
+def get_public_posts(
+    session: Session,
+    settings: PublicSiteSettings,
+    category: str | None = None,
+    tag: str | None = None,
+    page: int = 1,
+    size: int = 10,
+) -> list[dict]:
+    q = select(Post)
+    if category:
+        cat = session.exec(select(Category).where(Category.slug == category)).first()
+        if not cat or cat.id is None:
+            return []
+        q = q.where(Post.category_id == cat.id)
+    if tag:
+        selected_tag = session.exec(select(Tag).where(Tag.slug == tag)).first()
+        if not selected_tag or selected_tag.id is None:
+            return []
+        post_ids = [
+            item.post_id
+            for item in session.exec(
+                select(PostTag).where(PostTag.tag_id == selected_tag.id)
+            ).all()
+        ]
+        if not post_ids:
+            return []
+        q = q.where(Post.id.in_(post_ids))
+
+    rows = list(
+        session.exec(
+            q.order_by(Post.is_pinned.desc(), Post.created_at.desc())
+        ).all()
+    )
+    visible = [post for post in rows if is_post_public(post, settings)]
+    start = (page - 1) * size
+    return [_post_to_dict(post, session) for post in visible[start : start + size]]
+
+
 def get_post_by_slug(session: Session, slug: str) -> dict:
     post = session.exec(select(Post).where(Post.slug == slug)).first()
     if not post:
+        raise HTTPException(status_code=404, detail="文章不存在")
+    post.views += 1
+    session.add(post)
+    session.commit()
+    session.refresh(post)
+    return _post_to_dict(post, session)
+
+
+def get_public_post_by_slug(
+    session: Session, slug: str, settings: PublicSiteSettings
+) -> dict:
+    post = session.exec(select(Post).where(Post.slug == slug)).first()
+    if not post or not is_post_public(post, settings):
         raise HTTPException(status_code=404, detail="文章不存在")
     post.views += 1
     session.add(post)
@@ -138,6 +191,15 @@ def get_post_by_id(session: Session, post_id: int) -> dict:
     if not post:
         raise HTTPException(status_code=404, detail="文章不存在")
     return _post_to_dict(post, session)
+
+
+def require_public_post_by_id(
+    session: Session, post_id: int, settings: PublicSiteSettings
+) -> Post:
+    post = session.get(Post, post_id)
+    if not post or not is_post_public(post, settings):
+        raise HTTPException(status_code=404, detail="文章不存在")
+    return post
 
 
 def create_post(session: Session, data: PostCreate) -> dict:
@@ -223,10 +285,29 @@ def count_posts(session: Session, status: str | None = None) -> int:
     return session.exec(q).one()
 
 
+def count_public_posts(session: Session, settings: PublicSiteSettings) -> int:
+    posts = session.exec(select(Post)).all()
+    return sum(1 for post in posts if is_post_public(post, settings))
+
+
 def toggle_like(session: Session, post_id: int, unlike: bool = False) -> dict:
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(404, "文章不存在")
+    post.likes = max(0, post.likes + (-1 if unlike else 1))
+    session.add(post)
+    session.commit()
+    session.refresh(post)
+    return {"likes": post.likes}
+
+
+def toggle_public_like(
+    session: Session,
+    post_id: int,
+    settings: PublicSiteSettings,
+    unlike: bool = False,
+) -> dict:
+    post = require_public_post_by_id(session, post_id, settings)
     post.likes = max(0, post.likes + (-1 if unlike else 1))
     session.add(post)
     session.commit()
