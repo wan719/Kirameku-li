@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
@@ -8,7 +8,7 @@ import { getChapterList } from "@/app/api/novel/novel-api";
 import { Chapter, decodeBookUrl } from "../_lib/utils";
 import LoadingTips from "../_lib/LoadingTips";
 
-export default function ChapterListPage() {
+function ChapterListPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -86,5 +86,13 @@ export default function ChapterListPage() {
         </motion.div>
       )}
     </div>
+  );
+}
+
+export default function ChapterListPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChapterListPageContent />
+    </Suspense>
   );
 }

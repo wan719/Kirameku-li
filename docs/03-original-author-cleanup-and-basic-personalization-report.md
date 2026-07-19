@@ -287,3 +287,32 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
 | `pnpm exec eslint config/site.ts config/projects.ts app/projects/projectsData.ts app/projects/page.tsx tests/project-config.test.mjs` | 0 | 本任务文件 0 errors、0 warnings。 |
 | `pnpm build` | 0 | Next.js 生产构建成功，39 个路由生成；后端未启动时 RSS 保留既有非阻塞 `ECONNREFUSED 127.0.0.1:8000` 日志。 |
+
+## 12. Task 8 Header、Footer、主题与基础品牌素材
+
+新增 `config/navigation.ts` 锁定“首页、项目、文章、关于”四项公开导航，并重写全站 Header：桌面展示完整字标，移动端展示图标、主题按钮和抽屉按钮；抽屉具备 `aria-controls`、`aria-expanded`、动态可访问名称、Escape 关闭和链接点击关闭行为。动态、相册与后台入口不再出现在主导航。
+
+新增 Footer，集中展示品牌副标题、GitHub、邮箱、上游 Kirameku 致谢和 LICENSE；未展示域名、ICP备案、萌备案或运行时间。根布局使用 `siteBrand` 生成 metadata，接入 Footer，并移除旧背景渲染器的全站挂载。Task 12 尚未到达，因此旧主页音乐、头像和小组件在本任务提交中仍保留，后续将按计划集中清理。
+
+原创品牌文件放在真实前台静态目录 `Kirameku/public/brand/`，包括共鸣环与手写“晚”的 `logo-icon.svg`、完整 `logo-wordmark.svg`；同时新增 `public/favicon.svg` 和真实 ICO 容器的 `public/favicon.ico`。旧 `app/icon.png` 是原作者图标且会被 Next 自动注册，因此删除并改由根 metadata 显式引用新 favicon。SVG 不嵌入位图、网络资源或外部字体；深色主题对品牌图像应用高对比单色滤镜，避免深色字标消失。
+
+新增 `config/theme.ts` 与重写后的 ThemeProvider：首次访问跟随系统主题；只有没有手动选择时才继续监听系统变化；手动选择写入 `kirameku-theme` 并在重载后恢复。全局样式增加浅色纸张网格与深色夜空网格、品牌色变量、Header/Footer 状态以及 `prefers-reduced-motion: reduce` 降级规则。
+
+删除旧 `app/icon.png` 后触发了 Next 16 的完整生产预渲染检查，暴露五个既有 `useSearchParams` 页面缺少 Suspense 边界。为恢复标准构建，仅在 `/auth/callback`、`/messages`、`/moments`、`/novel/[bookUrl]` 和 `/novel/[bookUrl]/[chapter]` 增加最小页面级 Suspense 包装，没有修改页面业务。文档没有列出这些真实失败路径，已按要求以实际代码路径为准记录。`moments` 与 novel chapter 的历史 `set-state-in-effect` lint 仍存在且不属于该机械包装，本阶段没有扩大范围清理。
+
+### 12.1 测试与浏览器验收
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:brand`（实现前） | 1 | 按预期失败：品牌导航与主题配置模块尚不存在。 |
+| `pnpm test:brand`（深色 Logo 回归断言后） | 1 | 3/4 通过，新增断言按预期指出深色品牌图像适配尚未接入。 |
+| `pnpm test:brand`（最终） | 0 | 4/4 通过：导航顺序、主题解析、原创 SVG/ICO、metadata/Footer/reduced-motion/深色 Logo 接线。Node 输出既有 `.ts` ESM 模块类型性能提示，未为消除提示改变全项目模块类型。 |
+| `pnpm test:config` | 0 | 5/5 通过，Task 7 品牌与项目配置保持稳定。 |
+| `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
+| Task 8 定向 ESLint | 0 | 根布局、Header、Footer、ThemeProvider、导航/主题配置和品牌测试 0 errors、0 warnings。 |
+| `pnpm build` | 0 | Next.js 生产构建通过，38 个路由完成预渲染；后端未启动时 RSS 保留既知非阻塞 `ECONNREFUSED 127.0.0.1:8000`。 |
+| `pnpm dev -- -p 3000` | 0 | 服务启动，`GET /` 返回 200。开发进程启动后曾被同目录 `next build` 覆盖 `.next` 产物，导致该旧进程无法水合；重启并改用干净生产服务复验，不归因于应用代码。 |
+| `pnpm exec next start -p 3001` | 0 | 生产服务启动，`GET /` 返回 200。 |
+| 生产模式浏览器验收（1440×900、390×844） | 0 | 桌面导航顺序正确；移动抽屉显示四项，动态可访问名称和 `aria-expanded` 正确，Escape 可关闭；主题切换后重载仍保持深色；Logo/字标自然尺寸非零，深色滤镜生效；Header/Footer 可见；两种视口横向溢出均为 0；控制台 0 errors、0 warnings。 |
+
+浏览器截图中的旧头像、歌单和浮动小组件属于 Task 12 明确安排的后续清理对象，本任务未把它们误当作新品牌资源，也没有新增或复制任何原作者、Live2D 或《鸣潮》素材。

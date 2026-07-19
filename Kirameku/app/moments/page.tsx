@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { Suspense, useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,7 +82,7 @@ function flattenReplies(
   return result;
 }
 
-export default function MomentsPage() {
+function MomentsPageContent() {
   const [moments, setMoments] = useState<Moment[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -560,5 +560,13 @@ function ReplyCard({ reply, onReply, likedCommentIds, onCommentLike }: {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MomentsPage() {
+  return (
+    <Suspense fallback={null}>
+      <MomentsPageContent />
+    </Suspense>
   );
 }

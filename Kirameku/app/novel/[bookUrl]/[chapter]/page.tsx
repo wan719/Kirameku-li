@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, Settings, Minus, Plus } from "lucide-react";
@@ -8,7 +8,7 @@ import { getBookContent, getChapterList, saveBookProgress } from "@/app/api/nove
 import { Chapter, decodeBookUrl, loadSettings, saveSettings, ReadingSettings, defaultSettings } from "../../_lib/utils";
 import LoadingTips from "../../_lib/LoadingTips";
 
-export default function ReadingPage() {
+function ReadingPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -234,5 +234,13 @@ export default function ReadingPage() {
         </motion.div>
       )}
     </div>
+  );
+}
+
+export default function ReadingPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReadingPageContent />
+    </Suspense>
   );
 }

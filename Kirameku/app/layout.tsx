@@ -4,11 +4,10 @@ import "./globals.css";
 import "highlight.js/styles/vs2015.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
-import { BackgroundProvider } from "@/components/providers/BackgroundProvider";
 import { MusicProvider } from "@/components/providers/MusicProvider";
 import { EffectProvider } from "@/components/providers/EffectProvider";
-import BackgroundRenderer from "@/components/layout/BackgroundRenderer";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import ClientWidgets from "@/components/layout/ClientWidgets";
 import ClickEffect from "@/components/ui/ClickEffect";
 import RadialMenu from "@/components/ui/RadialMenu";
@@ -17,7 +16,7 @@ import SeasonalEffect from "@/components/ui/SeasonalEffect";
 import KiraSparkle from "@/components/ui/KiraSparkle";
 import WelcomeScreen from "@/components/layout/WelcomeScreen";
 import VisitorTracker from "@/components/layout/VisitorTracker";
-import { siteConfig } from "@/siteConfig";
+import { siteBrand } from "@/config/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,8 +35,20 @@ const notoSerifSC = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: siteConfig.title,
-  description: siteConfig.bio,
+  applicationName: siteBrand.title,
+  title: {
+    default: siteBrand.title,
+    template: `%s · ${siteBrand.nickname}`,
+  },
+  description: siteBrand.subtitle,
+  creator: siteBrand.nickname,
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+  },
   alternates: {
     types: {
       "application/rss+xml": "/feed",
@@ -60,24 +71,20 @@ export default function RootLayout({
         <ThemeProvider>
           <EffectProvider>
             <WelcomeScreen />
-            <BackgroundProvider>
-              <MusicProvider>
-                <ToastProvider>
-                  <BackgroundRenderer />
-                  <VisitorTracker />
-                  <ClickEffect />
-                  <RadialMenu />
-                  <MouseTrail />
-                  <SeasonalEffect />
-                  <KiraSparkle />
-                  <Navbar />
-                  <main className="flex-1 pt-16">
-                    {children}
-                  </main>
-                  <ClientWidgets />
-                </ToastProvider>
-              </MusicProvider>
-            </BackgroundProvider>
+            <MusicProvider>
+              <ToastProvider>
+                <VisitorTracker />
+                <ClickEffect />
+                <RadialMenu />
+                <MouseTrail />
+                <SeasonalEffect />
+                <KiraSparkle />
+                <Navbar />
+                <main className="flex-1 pt-[72px]">{children}</main>
+                <Footer />
+                <ClientWidgets />
+              </ToastProvider>
+            </MusicProvider>
           </EffectProvider>
         </ThemeProvider>
       </body>

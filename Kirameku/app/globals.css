@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+:root {
+  --resonance-teal: #1ec8b7;
+  --sea-mist-teal: #0d6e75;
+  --night-sky-blue: #1a2338;
+  --star-violet: #7b61ff;
+  --glow-violet: #bfa7ff;
+  --moon-silver: #e6ecf3;
+  --paper-white: #fafaf8;
+}
+
 /* Tailwind CSS 4 class-based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -12,6 +22,15 @@ html {
 body {
   -webkit-user-select: none;
   user-select: none;
+}
+
+body {
+  color: #1a2338;
+  background-color: var(--paper-white);
+  background-image:
+    linear-gradient(rgba(13, 110, 117, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123, 97, 255, 0.025) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
 input, textarea, [contenteditable], .prose, code, pre {
@@ -235,4 +254,103 @@ input, textarea, [contenteditable], .prose, code, pre {
   60%  { transform: rotate(-4deg) scale(1.02); transform-origin: bottom left; }
   75%  { transform: rotate(2deg) scale(1.01); transform-origin: bottom right; }
   100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ========== Kirameku · 晚 brand shell ========== */
+
+.site-header,
+.site-mobile-drawer {
+  border-color: rgba(13, 110, 117, 0.14);
+  background: rgba(250, 250, 248, 0.94);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(26, 35, 56, 0.06);
+}
+
+.site-nav-link,
+.site-icon-button {
+  color: #415066;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.site-nav-link:hover,
+.site-icon-button:hover,
+.site-nav-link.is-active {
+  color: var(--sea-mist-teal);
+  background: rgba(30, 200, 183, 0.1);
+}
+
+.site-nav-link.is-active {
+  box-shadow: inset 0 -2px 0 var(--resonance-teal);
+}
+
+.site-footer {
+  border-color: rgba(13, 110, 117, 0.14);
+  background: rgba(230, 236, 243, 0.28);
+}
+
+.site-footer-link {
+  color: var(--sea-mist-teal);
+  text-decoration: none;
+}
+
+.site-footer-link:hover {
+  color: var(--star-violet);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dark body {
+  color: var(--moon-silver);
+  background-color: #101725;
+  background-image:
+    radial-gradient(circle at 14% 18%, rgba(30, 200, 183, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 12%, rgba(191, 167, 255, 0.1) 0 1px, transparent 2px),
+    linear-gradient(rgba(230, 236, 243, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px);
+  background-size: 140px 140px, 190px 190px, 32px 32px, 32px 32px;
+  animation: none;
+}
+
+.dark .site-header,
+.dark .site-mobile-drawer {
+  border-color: rgba(191, 167, 255, 0.16);
+  background: rgba(16, 23, 37, 0.94);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.24);
+}
+
+.dark .site-brand-image {
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+.dark .site-nav-link,
+.dark .site-icon-button {
+  color: #c7d0dd;
+}
+
+.dark .site-nav-link:hover,
+.dark .site-icon-button:hover,
+.dark .site-nav-link.is-active {
+  color: #8ce9df;
+  background: rgba(30, 200, 183, 0.1);
+}
+
+.dark .site-footer {
+  border-color: rgba(191, 167, 255, 0.14);
+  background: rgba(10, 16, 28, 0.52);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

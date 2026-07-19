@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:config": "node --experimental-strip-types --test tests/project-config.test.mjs"
+    "test:config": "node --experimental-strip-types --test tests/project-config.test.mjs",
+    "test:brand": "node --experimental-strip-types --test tests/brand-shell.test.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",
