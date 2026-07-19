@@ -126,7 +126,7 @@ pnpm start --hostname 127.0.0.1 --port 3000
 
 ## 其他配置
 
-后端完整变量模板位于 `Kirameku-backend/.env.example`，包括数据库、应用密钥、CORS、公共内容开关、GitHub OAuth 和可选 OSS。前台模板位于 `Kirameku/.env.example`，主要包含 API 与可选 reader 地址。不要提交填有真实值的 `.env`。
+后端完整变量模板位于 `Kirameku-backend/.env.example`，包括数据库、应用密钥、CORS、公共内容开关、GitHub OAuth、OAuth 回跳地址 `FRONTEND_ORIGIN` 和可选 OSS。前台模板位于 `Kirameku/.env.example`，主要包含 API 与可选 reader 地址。不要提交填有真实值的 `.env`。
 
 音乐歌单目前不是环境变量，而是在 `Kirameku/config/home.ts` 的 `musicConfig.playlistId` / `songIds` 中配置；两者为空时不会请求旧歌单接口。简历入口位于 `Kirameku/config/site.ts`，只有 `resume.enabled` 为 `true` 且存在有效 URL 时才渲染。
 

@@ -49,11 +49,33 @@ test("personal and unlicensed legacy asset trees are removed", async () => {
     "app/about/about.md",
     "data/moments.ts",
     "data/photos.ts",
+    "content/posts/build-kirameku-blog.md",
+    "content/posts/nginx-reverse-proxy-practice.md",
   ]) {
     assert.equal(await exists(new URL(path, appRoot)), false, `${path} still exists`);
   }
 
   assert.equal(await exists(new URL("项目图片", repoRoot)), false);
+  assert.equal(await exists(new URL("DEPLOY_NOTES.md", repoRoot)), false);
+  assert.equal(await exists(new URL("nginx-cache-debug.md", repoRoot)), false);
+});
+
+test("runtime defaults contain no legacy author identity", async () => {
+  const [feed, nextConfig, githubAuth, backendEnv] = await Promise.all([
+    readFile(new URL("app/feed/route.ts", appRoot), "utf8"),
+    readFile(new URL("next.config.ts", appRoot), "utf8"),
+    readFile(new URL("Kirameku-backend/app/api/github_auth.py", repoRoot), "utf8"),
+    readFile(new URL("Kirameku-backend/.env.example", repoRoot), "utf8"),
+  ]);
+
+  const runtimeSources = [feed, nextConfig, githubAuth].join("\n");
+  assert.doesNotMatch(
+    runtimeSources,
+    /Starhiro|hiromu\.top|guh982719@gmail\.com|hong\.jpg|gitee\.com\/hongzyh/i,
+  );
+  assert.match(feed, /siteConfig\.social\.email/);
+  assert.match(githubAuth, /http:\/\/localhost:3000/);
+  assert.match(backendEnv, /^FRONTEND_ORIGIN=http:\/\/localhost:3000$/m);
 });
 
 test("music remains configurable but has a safe unconfigured state", async () => {

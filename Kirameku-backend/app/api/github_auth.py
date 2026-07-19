@@ -15,7 +15,7 @@ from app.models.github_user import GitHubUser
 router = APIRouter(prefix="/api/auth/github", tags=["GitHub 登录"])
 
 # 前端地址（登录成功后跳转）
-FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "https://boke.hiromu.top")
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000")
 
 
 @router.get("/login")
