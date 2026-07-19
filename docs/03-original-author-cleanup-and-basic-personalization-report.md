@@ -483,7 +483,7 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 
 ### 19.1 分支与提交清单
 
-执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至复查修正提交前共有 21 个第三阶段提交：
+执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至最终验证记录提交前共有 22 个第三阶段提交：
 
 | SHA | 提交 |
 |---|---|
@@ -508,6 +508,7 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 | `2db0f8e` | `fix: return 404 for hidden post pages` |
 | `01da853` | `docs: report phase three verification` |
 | `0d0748a` | `fix: surface allowlisted posts on homepage` |
+| `ac177a9` | `docs: correct public article visibility guidance` |
 
 最后一次复查更正文档不能在自身内容中稳定引用自身 SHA，准确 SHA 以最终 `git log` 和 Codex 回复为准。
 
@@ -648,5 +649,9 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 ### 19.11 独立复查修正
 
 最终独立代码审查发现主页曾以公开配置中的布尔值决定是否请求文章列表，这会漏掉 `PUBLIC_POSTS_ENABLED=false` 但命中 allowlist 的已发布文章；README 和首次报告还把全局开关与 allowlist 的关系写反。新增失败测试复现主页返回 0 篇，随后改为在公共配置有效时始终读取后端已过滤的文章列表，专项测试恢复 5/5；README 测试同步锁定 `false + allowlist` 与 `true = 全部已发布文章` 的准确语义。报告中的 readiness 路径也由错误的 `/api/ready` 更正为 `/api/health/ready`。
+
+复查修正后的最终验证中，曾将 `pnpm exec tsc --noEmit` 与 `pnpm build` 并行启动；build 重写 `.next/types` 时，tsc 短暂因缺少生成中的 `routes.js` 退出 1。没有为此修改源码；改为串行后，`pnpm build` 退出 0、随后 `pnpm exec tsc --noEmit` 退出 0。最终再次执行前台阶段测试 30/30、后端测试 56/56、后台品牌测试 4/4、README 测试 5/5、后台 typecheck/build、后端 compileall/pip check，退出码均为 0。
+
+原审查者针对 `01da853..ac177a9` 复验后确认三项发现均已解决，没有剩余 Critical 或 Important 问题；保留的真实 PostgreSQL、已登录后台 CRUD、OAuth/OSS 联调仍按 19.9 节列为人工或环境验收项。
 
 第三阶段到此停止，等待 ChatGPT 复查；未合并 `main`、未推送部署、未创建 Release。
