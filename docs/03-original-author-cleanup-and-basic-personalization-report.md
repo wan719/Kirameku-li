@@ -234,3 +234,30 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | 同一组文件定向 ESLint（格式化后） | 0 | 0 errors，0 warnings。 |
 
 当前环境没有可连接的 PostgreSQL，因此没有执行真实交互创建；成功写入、重复冲突、哈希和回滚由内存 SQLite 自动化测试覆盖。生产或验收环境仍需由操作者在后端目录运行 `python -m app.scripts.create_admin` 并自行输入本地凭据。
+
+## 10. Task 6 私有 Markdown 草稿导入
+
+新增 `python -m app.scripts.import_post_draft "<本地 Markdown 路径>"`。命令只读取调用者显式传入的单个文件，不扫描目录、不访问 second-brain 仓库，也不复制 Markdown 到当前仓库。YAML Front Matter 使用 `PyYAML.safe_load` 解析，因此在 `requirements.txt` 中显式声明当前已验证的 `PyYAML==6.0.3`。
+
+解析和写入规则如下：
+
+- Front Matter 必须是 YAML 对象，`slug` 必填且只接受小写字母、数字和连字符。
+- `title` 优先取 Front Matter；缺失时取正文第一个一级标题；两者均缺失则终止。
+- `summary` 写入文章描述，`category` 和 `tags` 按名称复用或创建，并同步关联计数。
+- 首次导入按 slug 创建 `draft`；再次导入更新同一 draft ID，不创建重复文章。
+- slug 已对应 `published` 文章时拒绝覆盖；所有创建和更新都再次强制 `status=draft`、`published_at=null`。
+- 分类、标签、文章和关联写入位于同一事务，任何数据库异常均回滚。
+- 命令成功只输出文章 ID、slug 与 `created`/`updated`；错误输出不包含文件路径、正文或 Front Matter 内容。
+- 导入器不读取或修改 `PUBLIC_POST_SLUG_ALLOWLIST`，不会自动公开文章。
+
+测试仅在 `tempfile.TemporaryDirectory` 中创建虚构英文正文，不含用户真实笔记、私有目录结构或私有仓库地址。当前环境未连接真实 PostgreSQL，也未执行真实私有笔记导入；该部分保留为人工验收步骤。
+
+### 10.1 测试证据
+
+| 命令 | 退出码 | 结果 |
+|---|---:|---|
+| `venv\Scripts\python.exe -m unittest tests.test_post_draft_import -v`（实现前） | 1 | 10/10 按预期失败，导入服务与命令尚不存在。 |
+| `venv\Scripts\python.exe -m unittest tests.test_post_draft_import -v`（实现后） | 0 | 最终 12/12 通过，覆盖文件缺失、YAML 无效、slug 缺失、标题缺失/H1 回退、首次创建、重复更新、无重复文章、已发布拒绝、事务回滚、安全输出、参数校验和公开白名单不变。 |
+| `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 56/56 通过。 |
+| `venv\Scripts\python.exe -m compileall -q app tests` | 0 | 应用与测试模块可编译。 |
+| `venv\Scripts\python.exe -m pip check` | 0 | `No broken requirements found.` |
