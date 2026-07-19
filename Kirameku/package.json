@@ -13,7 +13,8 @@
     "test:brand": "node --experimental-strip-types --test tests/brand-shell.test.mjs",
     "test:home": "node --experimental-strip-types --test tests/homepage.test.mjs",
     "test:projects": "node --experimental-strip-types --test tests/project-pages.test.mjs",
-    "test:content": "node --experimental-strip-types --test tests/content-pages.test.mjs"
+    "test:content": "node --experimental-strip-types --test tests/content-pages.test.mjs",
+    "test:cleanup": "node --experimental-strip-types --test tests/legacy-cleanup.test.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",

@@ -19,7 +19,7 @@ export default function VisitorTracker() {
         .catch(() => {});
     }
 
-    // 获取地理位置，供看板娘欢迎语使用
+    // 获取地理位置，用于匿名访客统计。
     if (!sessionStorage.getItem("visitor_location")) {
       fetch("/api/visitors/location")
         .then((r) => r.json())

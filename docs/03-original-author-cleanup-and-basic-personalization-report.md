@@ -404,3 +404,31 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `pnpm build` | 0 | 40 个页面生成成功，`/posts` 与 `/about` 均静态预渲染；后端未启动时仍只有既知 RSS `ECONNREFUSED 127.0.0.1:8000`。 |
 | `pnpm exec next start -p 3001` | 0 | 生产服务启动，`/posts` 返回 HTTP 200。 |
 | 生产浏览器验收（1280 默认视口、390×844） | 0 | 空状态文案与两个链接正确；关于页三项目和完整结构可见；简历、手机号、学校、年级均不在 DOM；两种视口横向溢出均为 0；复制按钮实际点击显示“复制成功”，获得焦点后 `tag=BUTTON`、`tabIndex=0`。Live2D 的既有普通日志待 Task 12 清理，页面无应用 error。 |
+
+## 16. Task 12 音乐、旧模块入口与原作者资产清理
+
+公共动态与相册入口已关闭：`/moments`、`/photowall` 页面只调用 Next `notFound()`，不再导入公共 API、GitHub OAuth、历史数据或图片组件，生产 HTTP 均返回 404。Header、首页、Footer 在前序任务已经没有这两个入口；本任务进一步删除未使用的旧 `app/HomeClient.tsx`、`LatestChatterCarousel` 和 `PhotoWallPreview`，因此源码中也不再残留对应跳转。后台 `admin/src/api/chatter.ts`、`admin/src/api/album.ts` 及两项管理页面均保留，后端 chatter/album 路由和数据库历史内容未修改。
+
+音乐能力保留：`MusicProvider`、播放器组件、`/api/music` 和 `/music` 页面继续存在，配置仍从 `musicConfig.playlistId` / `songIds` 读取。当前两项为空时不请求歌单；外部 saying 请求也同步受音乐配置门控，避免空歌单时产生无关网络访问。首页和 `/music` 都显示“歌单整理中”。兼容 `siteConfig` 的歌单保持空值，头像改为原创品牌图标，背景图列表清空，文章缺省封面改为本阶段原创鸿蒙 Agent 抽象封面，不再引用 `/images`。
+
+严格按“删前搜索 → 路径校验 → 删除 → 删后搜索”处理资源。删前 `git grep` 明确列出了头像、about 封面、动态/相册 fallback、兼容配置与 Live2D 挂载点；随后对三个绝对路径执行仓库根目录前缀校验，通过后删除：
+
+- `Kirameku/public/images/`：21 个旧头像、动态和相册图片。
+- `Kirameku/public/live2d/`：1178 个文件，约 214 MiB；授权边界不明且包含多套第三方角色模型、动作和音频，因此不继续使用。
+- 根目录 `项目图片/`：45 个未被当前项目配置引用的上游个人项目展示素材。
+
+同时删除原作者 `about.md`、静态 moments/photos fallback 数据、Live2D 注入组件与专属 CSS、径向旧导航。通用照片 UI 组件继续保留未来管理/展示能力，其 `Photo` 纯类型迁移到 `components/photos/types.ts`，没有恢复历史照片数据。删后 `git grep` 的本地 `/images` 引用只剩历史内容草稿中尚未公开的缺省封面文本，以及 Leaflet 官方 marker 的第三方通用 URL；运行时代码中 Live2D 引用为 0。Footer 的 `Xinghongia/Kirameku` 仍按设计作为允许项保留上游署名。
+
+### 16.1 测试与浏览器验收
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:cleanup`（实现前） | 1 | 1/5 通过；其余四项按预期命中开放的公共路由、旧控件挂载、现存资源目录和旧音乐空状态。 |
+| `pnpm test:cleanup`（最终） | 0 | 5/5 通过：两条公共路由 404 契约、无旧挂载、个人/未授权资产移除、音乐未来配置能力和后台内容管理保留。 |
+| 前台阶段测试全集 | 0 | `test:config` 5/5、`test:brand` 4/4、`test:home` 5/5、`test:projects` 4/4、`test:content` 5/5、`test:cleanup` 5/5，共 28/28 通过。 |
+| `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过；资源删除后遗留的照片类型引用已迁移为无数据纯类型。 |
+| Task 12 定向 ESLint | 0 | 0 errors；`/music` 保留两个既有 `@next/next/no-img-element` warning，本任务不扩大历史 Lint 清理。 |
+| `pnpm build` | 0 | 40 个页面生成成功；路由表保留两条显式 `notFound()` 页面，但真实请求返回 404。后端未启动时仍只有既知 RSS `ECONNREFUSED 127.0.0.1:8000`。 |
+| 生产 HTTP 验收 | 0 | `/` 200、`/music` 200、`/moments` 404、`/photowall` 404。 |
+| 生产浏览器验收 | 0 | 首页旧模块链接、`#waifu`、`#waifu-toggle`、Live2D script 和 Toolbox 文案数量均为 0；`/music` 显示“歌单整理中”且不显示旧配置提示；页面无横向溢出，浏览器 0 errors。 |
+| 生产访问日志扫描 | 0 | 没有 `/live2d`、旧 `/images`、`/api/music` 或 `/api/uapis` 请求。 |

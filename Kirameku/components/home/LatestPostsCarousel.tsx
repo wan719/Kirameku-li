@@ -47,7 +47,7 @@ export default function LatestPostsCarousel() {
         className="relative flex-1 min-h-[160px] md:min-h-[160px] rounded-3xl overflow-hidden group cursor-pointer"
       >
         <Image
-          src={hero.cover || "/images/default-cover.jpg"}
+          src={hero.cover || "/brand/projects/intern-pilot-harmonyos-agent.webp"}
           alt={hero.title}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -89,7 +89,7 @@ export default function LatestPostsCarousel() {
               className="relative rounded-2xl overflow-hidden group cursor-pointer h-[80px]"
             >
               <Image
-                src={post.cover || "/images/default-cover.jpg"}
+                src={post.cover || "/brand/projects/intern-pilot-harmonyos-agent.webp"}
                 alt={post.title}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"

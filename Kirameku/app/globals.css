@@ -179,23 +179,6 @@ input, textarea, [contenteditable], .prose, code, pre {
   animation: gradient-flow 20s ease infinite;
 }
 
-/* Live2D 看板娘层级 */
-#waifu {
-  z-index: 40 !important;
-}
-
-#waifu-toggle {
-  z-index: 40 !important;
-}
-
-/* 移动端隐藏看板娘 */
-@media (max-width: 767px) {
-  #waifu,
-  #waifu-toggle {
-    display: none !important;
-  }
-}
-
 /* Recharts 去掉点击黑框 + 交互样式 */
 .recharts-wrapper *:focus,
 .recharts-wrapper *:focus-visible {

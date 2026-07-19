@@ -10,7 +10,6 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ClientWidgets from "@/components/layout/ClientWidgets";
 import ClickEffect from "@/components/ui/ClickEffect";
-import RadialMenu from "@/components/ui/RadialMenu";
 import MouseTrail from "@/components/ui/MouseTrail";
 import SeasonalEffect from "@/components/ui/SeasonalEffect";
 import KiraSparkle from "@/components/ui/KiraSparkle";
@@ -75,7 +74,6 @@ export default function RootLayout({
               <ToastProvider>
                 <VisitorTracker />
                 <ClickEffect />
-                <RadialMenu />
                 <MouseTrail />
                 <SeasonalEffect />
                 <KiraSparkle />

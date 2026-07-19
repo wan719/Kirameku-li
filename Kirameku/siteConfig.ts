@@ -10,30 +10,23 @@ export const siteConfig = {
   bio: `${siteBrand.subtitle}。${siteBrand.identity}`,
 
   // 头像设置
-  avatarUrl: "/images/hong.jpg",
+  avatarUrl: "/brand/logo-icon.svg",
 
   // 背景设置
   useGradient: false,
   themeColors: ["#a18cd1", "#fbc2eb", "#a1c4fd", "#c2e9fb"],
-  bgImages: [
-    "/images/1.webp",
-    "/images/42.webp",
-    "/images/20.webp",
-    "/images/36.webp",
-    "/images/39.webp",
-    "/images/41.webp",
-  ],
+  bgImages: [] as string[],
 
   // 默认封面图
-  defaultPostCover: "/images/default-cover.jpg",
+  defaultPostCover: "/brand/projects/intern-pilot-harmonyos-agent.webp",
 
   // 照片墙预览图
-  photoWallImage: "/images/photo-wall.jpg",
+  photoWallImage: "",
 
   // 云音乐配置（网易云音乐）
   // 填歌单 ID 则自动拉取整个歌单，填歌曲 ID 列表则只播放指定歌曲
   cloudMusicPlaylistId: "",             // 未配置时不请求歌单
-  cloudMusicIds: [],                     // 歌曲 ID 列表（歌单为空时使用）
+  cloudMusicIds: [] as string[],         // 歌曲 ID 列表（歌单为空时使用）
 
   // 后端 API 地址（留空，开发通过 next.config.ts rewrites 代理，生产通过 Nginx 反代）
   apiBaseUrl: "",

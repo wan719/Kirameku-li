@@ -94,7 +94,7 @@ export default function PostCard({ post, index }: PostCardProps) {
             {/* 封面图 */}
             <div className="relative aspect-[16/10] w-full overflow-hidden">
               <Image
-                src={post.cover || "/images/default-cover.jpg"}
+                src={post.cover || "/brand/projects/intern-pilot-harmonyos-agent.webp"}
                 alt={post.title}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
