@@ -23,6 +23,18 @@ test("posts page never renders unfiltered category counts", async () => {
   assert.match(page, /posts\.length > 0 && categories\.length > 0/);
 });
 
+test("post detail returns a server-side 404 when the public API denies access", async () => {
+  const layout = await readFile(
+    new URL("app/posts/[slug]/layout.tsx", root),
+    "utf8",
+  );
+
+  assert.match(layout, /export const dynamic = "force-dynamic"/);
+  assert.match(layout, /\/api\/posts\/\$\{encodeURIComponent\(slug\)\}/);
+  assert.match(layout, /cache: "no-store"/);
+  assert.match(layout, /if \(!response\.ok\) notFound\(\)/);
+});
+
 test("about page contains the public profile structure and project workflow", async () => {
   const page = await readFile(new URL("app/about/page.tsx", root), "utf8");
 
