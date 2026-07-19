@@ -478,3 +478,169 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 | `node --test docs/tests/phase3-readme.test.mjs`（最终） | 0 | 5/5 通过：项目身份、三个重点项目、公开开关、管理员/草稿命令、上游署名、LICENSE 与 SecondBrain 隐私边界均受覆盖。 |
 | `git remote -v` | 0 | 确认实际上游为 `https://github.com/Xinghongia/Kirameku.git`，README 使用对应网页链接。 |
 | `git diff --check` | 0 | README 与文档测试无空白错误。 |
+
+## 19. Task 15 全量验证与最终执行报告
+
+### 19.1 分支与提交清单
+
+执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至最终报告提交前共有 19 个第三阶段提交：
+
+| SHA | 提交 |
+|---|---|
+| `3d4957a` | `docs: add phase three design and execution plan` |
+| `ae539bb` | `docs: audit legacy author references` |
+| `b888878` | `feat: add public site visibility config` |
+| `3c1311b` | `feat: enforce public content visibility` |
+| `3e509ee` | `feat: isolate public site statistics` |
+| `47d9755` | `feat: add secure admin bootstrap command` |
+| `9dc502e` | `feat: add private markdown draft importer` |
+| `bde0a85` | `feat: add personalized site and project config` |
+| `c1ee12d` | `feat: apply Kirameku Wan brand shell` |
+| `6ccef23` | `feat: rebuild personalized homepage` |
+| `bda3522` | `feat: add project showcase pages` |
+| `28a47b3` | `feat: personalize posts and about pages` |
+| `7993cc0` | `chore: remove legacy author assets and public modules` |
+| `56bf21e` | `chore: retire legacy public entry points` |
+| `5f02c00` | `chore: rebrand admin console` |
+| `ca1c538` | `docs: document personalized site workflow` |
+| `226e9a5` | `chore: remove remaining legacy author references` |
+| `7858d08` | `fix: remove legacy runtime defaults` |
+| `2db0f8e` | `fix: return 404 for hidden post pages` |
+
+最终报告提交不能在自身内容中稳定引用自身 SHA，准确 SHA 以最终 `git log` 和 Codex 回复为准。
+
+### 19.2 修改文件概览
+
+相对 `main` 的最终提交前统计为 1527 个文件、7443 行新增、90400 行删除。大量文件数来自明确删除的旧 Live2D 模型、动作、纹理、音频及上游个人图片，不是业务数据删除。
+
+| 范围 | 主要内容 |
+|---|---|
+| `Kirameku-backend/app/`、`tests/` | 公共内容开关与白名单、公共统计隔离、安全健康检查复验、管理员创建命令、Markdown 草稿导入、鉴权回归测试。 |
+| `Kirameku/app/`、`components/`、`config/`、`lib/` | 新品牌壳、首页、项目列表/详情、文章空状态、关于页、公共入口关闭、隐藏文章服务端 404、配置化音乐/简历安全空状态。 |
+| `Kirameku/public/brand/` | 原创 Logo、字标、favicon、共鸣插画和三张项目 WebP 封面。 |
+| `Kirameku-backend/admin/` | 后台品牌标题、Logo、favicon、登录页/侧栏占位图和品牌回归测试。 |
+| 删除的旧资源与模块 | `public/live2d/`、旧 `public/images/`、根 `项目图片/`、旧作者 about/静态文章/部署笔记、旧公共首页聚合模块、旧动态相册静态数据和径向导航。 |
+| 文档 | 根 README、设计与执行任务、路径映射/审计记录、第三阶段执行报告和 README 回归测试。 |
+
+没有删除数据库中的历史文章、动态、相册、访客统计或后台管理接口。没有读取、公开、复制或修改 SecondBrain 私有仓库。
+
+### 19.3 原作者信息复查与允许命中
+
+最终重新执行：
+
+```powershell
+git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.jpg|gitee\.com/hongzyh|github\.com/Xinghongia"
+```
+
+运行时代码中的原作者个人身份、域名、邮箱、手机号、头像路径、Gitee 地址和旧 OSS 主机已经清零。Task 15 额外发现并处理了此前未进入页面审计的 `feed/route.ts` 旧邮箱、`next.config.ts` 旧图片主机以及 GitHub OAuth 的旧站点回退地址；同时删除没有运行时引用的旧静态文章和部署排障笔记。没有删除数据库内容。
+
+剩余命中按设计分类如下：
+
+| 分类 | 允许命中 | 原因 |
+|---|---|---|
+| 必要上游署名 | `components/layout/Footer.tsx`、根 README 的 `Xinghongia/Kirameku` | 保留真实 fork 来源、LICENSE 和必要上游署名。 |
+| 负向回归断言 | `tests/homepage.test.mjs`、`tests/legacy-cleanup.test.mjs` | 只用于保证旧手机号和身份关键词不能重新进入运行时。 |
+| 审计证据 | `docs/01-*`、`docs/audits/*`、第三阶段 design/task/report | 记录原始问题、执行规则和清理证据，不能伪称为运行时残留。 |
+
+因此最终结论不是“仓库关键词 0 命中”，而是“运行时旧个人身份 0 命中，必要上游与审计证据按规则保留”。
+
+### 19.4 公共访问与鉴权矩阵
+
+最终 HTTP 脚本共检查 25 项，25/25 通过：
+
+| 入口 | 期望/实测 | 说明 |
+|---|---|---|
+| 后端 `/api/health`、`/docs`、`/openapi.json` | 200 | liveness 不依赖数据库；文档和 OpenAPI 可访问。 |
+| 后端 `/api/ready`（临时 SQLite） | 200 | 临时测试数据库可连接。 |
+| 后端 `/api/ready`（无 PostgreSQL） | 503 | 应用仍可启动，响应不暴露连接串或凭据。 |
+| 前台 `/`、`/projects`、`/posts`、`/about` | 200 | 主公开页面可访问；文章为空状态。 |
+| `/projects/intern-pilot`、`/projects/intern-pilot-harmonyos-agent` | 200 | 两个白名单项目详情可访问。 |
+| `/moments`、`/photowall` | 404 | 公共动态与相册关闭；后台数据与管理能力保留。 |
+| `/posts/build-kirameku-blog` | 404 | 旧文章不能通过已知 slug 绕过公共开关。 |
+| `/api/site/public-config` | 200 | 只返回三个内容开关和启动日期是否配置，不泄露 allowlist、namespace 或凭据。 |
+| `/api/visitors/count` | 200 | 新 namespace 计数为 0，返回值不含 namespace 和历史内容统计。 |
+| `/api/posts`、`/api/chatters`、`/api/albums` | 200、空集合 | 三类公共内容默认关闭，查询参数不能绕过。 |
+| 后端挂载 `/admin/` | 200 | 静态后台可加载；浏览器直接访问 welcome 被重定向到 `#/login`。 |
+| 访客管理、dashboard、文章管理（无 Token） | 401 | 未登录不能读取管理数据。 |
+| 普通 GitHub 用户 Token | 403（自动化回归） | 非管理员身份不能越权进入管理接口。 |
+
+首次完整 HTTP 脚本发现旧文章详情仍返回客户端壳 200。新增失败回归测试后，在动态服务端 layout 中先验证公共文章 API；修复后该路由真实返回 404，第二次矩阵 25/25 通过。
+
+### 19.5 新增环境变量与安全默认值
+
+本阶段正式新增或纳入运行手册的变量如下，示例值均为占位符，不含真实凭据：
+
+| 变量 | 默认/用途 |
+|---|---|
+| `PUBLIC_POSTS_ENABLED` | `false`，关闭公共文章。 |
+| `PUBLIC_POST_SLUG_ALLOWLIST` | 空，仅允许显式 slug；不会公开 draft。 |
+| `PUBLIC_CHATTERS_ENABLED` | `false`，关闭公共动态。 |
+| `PUBLIC_ALBUMS_ENABLED` | `false`，关闭公共相册。 |
+| `PUBLIC_STATS_NAMESPACE` | `kirameku-wan-v1`，隔离旧访问量。 |
+| `SITE_LAUNCH_DATE` | 空，可选 ISO 日期；未配置时不显示运行天数。 |
+| `FRONTEND_ORIGIN` | `http://localhost:3000`，GitHub OAuth 安全本地回退地址。 |
+
+`DATABASE_URL`、`SECRET_KEY`、GitHub OAuth、OSS 和 CORS 配置继续使用本地 `.env`；本轮没有读取或提交真实 `.env`、Secret、Token、密码、数据库凭据。
+
+### 19.6 管理员命令与草稿导入验证
+
+`create_admin` 只接受交互输入，密码使用隐藏输入并哈希保存；任何 CLI 参数均被拒绝且不回显。无参数非交互调用退出码为 2（预期安全失败），8 项管理员专项测试全部通过，包括重复用户名/邮箱、密码不一致、事务安全、无默认种子账号和前端无 mock 登录。仓库中没有默认管理员、默认密码或可提交凭据。
+
+`import_post_draft <markdown-file>` 只读取调用者显式指定的单个 Markdown 文件。12 项专项测试覆盖 YAML/slug/title 校验、H1 回退、首次创建、重复导入幂等更新、已发布拒绝覆盖、事务回滚、安全输出、始终保持 draft 和不修改公开 allowlist。无参数调用退出码为 2（预期安全失败）；本轮只用系统临时目录中的虚构英文文件测试，没有访问真实私有笔记或 SecondBrain 仓库。
+
+### 19.7 前台、后台与自动化验证
+
+| 命令或检查 | 退出码 | 最终结果 |
+|---|---:|---|
+| 前台 `pnpm install --frozen-lockfile` | 0 | pnpm 11.9.0 冻结安装通过，无 npm/yarn lockfile。 |
+| 前台六组阶段测试 | 0 | `5 + 4 + 5 + 4 + 6 + 6 = 30/30` 通过。 |
+| 前台 `pnpm exec tsc --noEmit` | 0 | TypeScript 检查通过。 |
+| 前台 `pnpm build` | 0 | Next 16.2.4 生产构建成功，40 个页面；文章详情为动态服务端路由。 |
+| 前台 `pnpm lint` | 1 | 87 errors、60 warnings，均属阶段前历史债务；本阶段定向文件检查通过。 |
+| 后端 `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 56/56 通过。 |
+| 后端 `venv\Scripts\python.exe -m compileall -q app tests` | 0 | 应用与测试可编译。 |
+| 后端 `venv\Scripts\python.exe -m pip check` | 0 | `No broken requirements found.` |
+| Uvicorn 启动与 HTTP 矩阵 | 0 | 临时 SQLite 下后端可启动；25/25 HTTP 断言通过。 |
+| 无 PostgreSQL 启动烟测 | 0 | health/docs 200、readiness 503，未在启动阶段连接数据库。 |
+| 后台 `pnpm install --frozen-lockfile` | 0 | pnpm 11.9.0 冻结安装通过。 |
+| 后台 `pnpm test:brand` | 0 | 4/4 通过。 |
+| 后台 `pnpm typecheck` | 0 | Vue/TypeScript 类型检查通过。 |
+| 后台 `pnpm build` | 0 | Vite 构建成功，3337 modules、5.54 MB。 |
+| 后台 `pnpm lint:check` | 1 | 166 errors、83 warnings，共 249 项历史债务；Task 13 定向文件为 0 errors。 |
+| `node --test docs/tests/phase3-readme.test.mjs` | 0 | README 5/5 通过。 |
+| 桌面/移动浏览器验收 | 0 | 1440×900 与 390×844 页面可见、无横向溢出；移动抽屉可开关；当前三端 URL 无浏览器 error。 |
+
+浏览器同时验证了前台品牌首页、项目列表、两个项目详情、文章、关于页、三个 404 入口、后台开发入口和 FastAPI 挂载后台。未登录访问两种后台 welcome 均重定向到登录页，标题为 `登录 | Kirameku · 晚`。
+
+### 19.8 安全验证与环境清理
+
+- 验证环境显式禁用 dotenv，使用合成 `SECRET_KEY` 和系统临时 SQLite，没有读取本地 `.env` 或真实凭据。
+- 公共配置响应精确为三个 false 开关和 `launchDateConfigured=false`；敏感字段命中数为 0。
+- 公共统计为新 namespace 的 0 计数，响应不含 namespace、旧访问量、文章/动态/相册数量。
+- 管理接口无 Token 为 401，非管理员 Token 为 403；公开访客接口继续可用。
+- `node_modules`、`.next`、`dist`、venv、缓存和日志均未进入 Git 暂存或提交。
+- 验收完成后已停止 3000、8000、8848 三个临时服务，并删除确认位于系统临时目录的 SQLite 烟测文件。
+
+### 19.9 未完成项、环境阻塞与已知债务
+
+- 未连接真实 PostgreSQL，因此未做历史数据的真实业务联调；56 项测试和临时 SQLite 覆盖了访问控制、管理保留与写入事务。
+- 未使用真实管理员凭据，无法自动验收登录后的侧栏、历史文章/动态/相册列表和真实 CRUD；这是刻意的安全边界，列入人工验收。
+- 未联调真实 GitHub OAuth、OSS、reader 服务、生产域名、备案信息；相关配置保持可选或安全空值。
+- 未执行真实 SecondBrain 草稿导入，没有读取私有仓库、路径或正文。
+- 简历 URL、歌单 ID/歌曲 ID、站点启动日期和生产域名尚未配置，因此对应公开内容保持关闭或空状态。
+- 前台全量 Lint 仍为 87 errors、60 warnings；后台为 166 errors、83 warnings。本阶段未扩大清理历史 Lint 债务。
+- Node 直接执行 `.ts` 配置测试时仍有 `MODULE_TYPELESS_PACKAGE_JSON` 性能提示；未为消除提示改变整个项目模块类型。
+- `get_current_user` 目前沿用第二阶段“必须为管理员”的语义；未来出现普通后台用户/编辑角色时应拆分登录用户与管理员依赖。
+- Next 构建路由表仍列出显式 `notFound()` 的 moments/photowall 静态入口，但真实 HTTP 与浏览器访问均为 404。
+
+### 19.10 人工验收步骤
+
+1. 在仅本机保存的 `.env` 中配置真实 PostgreSQL 和强随机 `SECRET_KEY`，执行数据库初始化，确认 readiness 为 200。
+2. 运行 `python -m app.commands.create_admin` 交互创建唯一管理员；确认终端不显示密码，数据库中只保存哈希。
+3. 登录 `/admin/`，检查 `Kirameku · 晚` 标题、Logo、侧栏及文章/动态/相册历史数据均仍存在，并完成一轮只读检查和受控 CRUD。
+4. 保持三个公共开关为 false 验证空状态；随后仅在临时验收环境开启文章并配置单个 slug allowlist，确认只公开该 published 文章，draft 与其他历史内容仍不可见；验收后恢复 false。
+5. 用一份脱敏 Markdown 临时文件执行两次 `import_post_draft`，确认第二次更新同一 draft、不重复创建、不自动发布；再对已发布同 slug 验证拒绝覆盖。
+6. 在桌面与手机实机检查首页、项目列表、两个详情、文章、关于页、主题切换、移动抽屉、复制邮箱、减少动态效果；确认动态、照片墙和旧文章详情为 404。
+7. 仅在取得合法素材和明确公开意图后配置歌单、简历、站点启动日期、生产域名、OAuth 与 OSS；不要把真实凭据提交到 Git。
+
+第三阶段到此停止，等待 ChatGPT 复查；未合并 `main`、未推送部署、未创建 Release。
