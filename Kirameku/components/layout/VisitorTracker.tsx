@@ -5,7 +5,8 @@ import { useEffect } from "react";
 export default function VisitorTracker() {
   useEffect(() => {
     // 访客记录
-    if (!sessionStorage.getItem("visitor_recorded")) {
+    const recordedKey = "kirameku_wan_visitor_recorded_v1";
+    if (!sessionStorage.getItem(recordedKey)) {
       fetch("/api/visitors/record", {
         method: "POST",
         headers: {
@@ -13,7 +14,7 @@ export default function VisitorTracker() {
         },
       })
         .then(() => {
-          sessionStorage.setItem("visitor_recorded", "1");
+          sessionStorage.setItem(recordedKey, "1");
         })
         .catch(() => {});
     }

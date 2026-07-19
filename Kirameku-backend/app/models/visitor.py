@@ -23,3 +23,11 @@ class Visitor(SQLModel, table=True):
     os: str = Field(default="", max_length=50)
     device_type: str = Field(default="", max_length=20)
     created_at: datetime = Field(default_factory=datetime.now)
+
+
+class PublicVisitorStat(SQLModel, table=True):
+    __tablename__ = "public_visitor_stat"
+
+    namespace: str = Field(primary_key=True, max_length=100)
+    count: int = Field(default=0, ge=0)
+    updated_at: datetime = Field(default_factory=datetime.now)

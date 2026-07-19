@@ -11,18 +11,13 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { siteConfig } from "@/siteConfig";
 import { postsData } from "@/data/posts";
 import { chattersData } from "@/data/chatters";
 import { getPosts, getPostsCount, type PostItem } from "@/app/api/posts";
 import { getChatters, getChattersCount, type ChatterItem } from "@/app/api/chatters";
 import { getMessages } from "@/app/api/messages";
 import { getAlbums } from "@/app/api/albums";
-
-/* ── helpers ── */
-function getDaysSince(dateStr: string) {
-  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 864e5);
-}
+import { getPublicSiteStats } from "@/app/api/visitors";
 
 function AnimatedNumber({ target, duration = 1500 }: { target: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -114,16 +109,19 @@ export default function GardenPage() {
   const [recentPosts, setRecentPosts] = useState<PostItem[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [chatterCount, setChatterCount] = useState(0);
+  const [runningDays, setRunningDays] = useState<number | null>(null);
   const [trendData, setTrendData] = useState<Array<{ date: string; 文章: number; 说说: number }>>([]);
   const [categoryData, setCategoryData] = useState<Array<{ name: string; value: number; color: string }>>([]);
   const [activePie, setActivePie] = useState<number | undefined>();
-  const days = getDaysSince(siteConfig.buildDate);
   const q = quotes[quoteIdx];
 
   useEffect(() => {
     getPosts({ status: "published", page: 1, size: 6 }).then(setRecentPosts).catch(() => {});
     getPostsCount("published").then((d) => setPostCount(d.count)).catch(() => {});
     getChattersCount("published").then((d) => setChatterCount(d.count)).catch(() => {});
+    getPublicSiteStats()
+      .then((data) => setRunningDays(data.runningDays))
+      .catch(() => {});
     Promise.all([
       getPosts({ status: "published", page: 1, size: 100 }),
       getChatters({ status: "published", page: 1, size: 100 }),
@@ -173,7 +171,9 @@ export default function GardenPage() {
   }, []);
 
   const statCards = [
-    { icon: Calendar, label: "运行天数", value: days, suffix: " 天", color: "from-indigo-500 to-indigo-600", ring: "ring-indigo-500/20" },
+    ...(runningDays === null
+      ? []
+      : [{ icon: Calendar, label: "运行天数", value: runningDays, suffix: " 天", color: "from-indigo-500 to-indigo-600", ring: "ring-indigo-500/20" }]),
     { icon: FileText, label: "文章", value: postCount, suffix: " 篇", color: "from-sky-500 to-sky-600", ring: "ring-sky-500/20" },
     { icon: MessageCircle, label: "说说", value: chatterCount, suffix: " 条", color: "from-amber-500 to-amber-600", ring: "ring-amber-500/20" },
     { icon: Gamepad2, label: "工具", value: 54, suffix: " 个", color: "from-rose-500 to-rose-600", ring: "ring-rose-500/20" },

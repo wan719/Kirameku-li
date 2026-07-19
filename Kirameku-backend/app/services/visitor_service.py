@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 from sqlmodel import Session, select, col
-from app.models.visitor import Visitor
+from app.models.visitor import PublicVisitorStat, Visitor
 
 # 内存缓存 IP 地理位置，避免重复请求
 _geo_cache: dict[str, dict] = {}
@@ -244,6 +244,7 @@ def record_visit(
     ip: str,
     path: str = "",
     user_agent: str = "",
+    public_stats_namespace: Optional[str] = None,
 ):
     """记录一次访问"""
     ua_info = _parse_ua(user_agent)
@@ -267,7 +268,21 @@ def record_visit(
         device_type=ua_info["device_type"],
     )
     session.add(visitor)
+
+    if public_stats_namespace:
+        counter = session.get(PublicVisitorStat, public_stats_namespace)
+        if counter is None:
+            counter = PublicVisitorStat(
+                namespace=public_stats_namespace,
+                count=1,
+            )
+        else:
+            counter.count += 1
+            counter.updated_at = datetime.now()
+        session.add(counter)
+
     session.commit()
+    session.refresh(visitor)
     return visitor
 
 
@@ -311,6 +326,11 @@ def get_recent_visitors(
 def get_visitor_count(session: Session) -> int:
     """获取总访客数"""
     return len(list(session.exec(select(Visitor)).all()))
+
+
+def get_public_visitor_count(session: Session, namespace: str) -> int:
+    counter = session.get(PublicVisitorStat, namespace)
+    return counter.count if counter else 0
 
 
 def delete_visitor(session: Session, visitor_id: int):

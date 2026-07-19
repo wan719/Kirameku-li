@@ -180,3 +180,31 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 | `pnpm build`（公共前台） | 0 | 39 个路由构建成功；后端未启动时 RSS 保留既知非阻塞 `ECONNREFUSED` 日志。 |
 
 人工脚本对 10 个新增管理读取 URL 进行了无 Token 请求，均返回 401；该行为随后加入自动化回归测试。未读取本地 `.env`，未写入真实 Token、密码或数据库凭据。
+
+## 8. Task 4 隔离公开访问统计
+
+新增 `public_visitor_stat` 计数表，以 `namespace` 为主键保存公开访问量。没有给旧 `visitor` 表增加列，也没有迁移、覆盖或删除旧访客明细：
+
+- `PUBLIC_STATS_NAMESPACE` 不存在或为空时使用 `kirameku-wan-v1`。
+- 当前 namespace 尚无计数行时，公开访问量为 0。
+- `POST /api/visitors/record` 在同一事务中保留管理员可见的访客明细，并只递增当前 namespace。
+- legacy namespace 或旧 `visitor` 明细不影响 `GET /api/visitors/count`。
+- 管理后台访客列表与 dashboard 继续读取完整 `visitor` 历史。
+- `init_db.sql` 只增加幂等的 `CREATE TABLE IF NOT EXISTS public_visitor_stat`，没有修改旧表或数据。
+
+公开统计响应固定为 `code`、`count`、`launchDate`、`runningDays`。namespace 和文章、草稿、动态、相册、分类、标签数量均不下发。`SITE_LAUNCH_DATE` 为空或非法时，日期与运行天数均为 `null`；有效时运行天数由服务端日期计算并钳制为非负值，避免客户端时区造成负数或跳变。
+
+公共前台新增类型化访客统计 API。`SiteDashboard` 与 `/garden` 不再使用 `siteConfig.buildDate` 或代码内回退日期：只有响应包含 `runningDays` 时才显示运行时间。首页统计同时展示新 namespace 访问量。访客 session key 更新为新站点版本标识，不再沿用原站会话键。
+
+### 8.1 测试与环境限制
+
+| 命令 | 退出码 | 结果 |
+|---|---:|---|
+| `venv\Scripts\python.exe -m unittest tests.test_public_site_statistics -v`（有效红灯） | 1 | 5 项中 3 failures、1 error：旧公开 count 泄漏历史值、namespace 模型与日期字段缺失。此前一次运行被 Python 3.9 测试注解兼容问题阻断，修正测试后才计为有效红灯。 |
+| 同一专项命令（实现后） | 0 | 最终 6/6 通过，覆盖初始 0、legacy 隔离、当前 namespace 递增、有效/无效日期和响应字段收敛。 |
+| `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 36/36 通过。 |
+| `venv\Scripts\python.exe -m compileall -q app tests` | 0 | 后端源码与测试均可编译。 |
+| `pnpm build`（公共前台） | 0 | TypeScript 与 39 个路由构建成功；后端未启动时 RSS 仍有既知非阻塞 `ECONNREFUSED`。 |
+| `pnpm exec eslint app/api/visitors.ts components/layout/VisitorTracker.tsx components/widgets/SiteDashboard.tsx app/garden/page.tsx` | 0 | 0 errors；`/garden` 的 2 个既有 unused warnings 未在本阶段清理。 |
+
+当前环境没有可连接的 PostgreSQL，未对真实库执行 DDL 或业务联调。既有部署在更新代码后必须执行幂等的 `public_visitor_stat` 建表语句（或按项目既有初始化流程执行更新后的 `init_db.sql`）；这是环境执行项，不影响内存数据库自动化验证，也不要求删除旧统计。

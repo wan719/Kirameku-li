@@ -298,6 +298,13 @@ CREATE TABLE IF NOT EXISTS visitor (
 CREATE INDEX IF NOT EXISTS idx_visitor_ip ON visitor(ip);
 CREATE INDEX IF NOT EXISTS idx_visitor_created ON visitor(created_at DESC);
 
+-- 新站公开访问计数按 namespace 隔离；旧 visitor 明细不迁移、不删除
+CREATE TABLE IF NOT EXISTS public_visitor_stat (
+    namespace      VARCHAR(100) PRIMARY KEY,
+    count          INTEGER      NOT NULL DEFAULT 0 CHECK (count >= 0),
+    updated_at     TIMESTAMP    DEFAULT NOW()
+);
+
 -- ============================================
 -- 插入默认管理员账号（密码: admin123）
 -- bcrypt hash of "admin123"

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -14,3 +16,10 @@ class PublicSiteStats(BaseModel):
 class PublicSiteConfigOut(BaseModel):
     contentVisibility: ContentVisibility
     siteStats: PublicSiteStats
+
+
+class PublicVisitorStatsOut(BaseModel):
+    code: int
+    count: int
+    launchDate: Optional[str]
+    runningDays: Optional[int]
