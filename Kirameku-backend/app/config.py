@@ -23,7 +23,9 @@ AUTO_CREATE_TABLES = os.getenv("AUTO_CREATE_TABLES", "false").lower() in {
     "on",
 }
 
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173,https://boke.hiromu.top").split(",")
+CORS_ORIGINS = os.getenv(
+    "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
+).split(",")
 
 # GitHub OAuth
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")

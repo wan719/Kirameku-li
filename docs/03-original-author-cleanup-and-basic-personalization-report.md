@@ -113,3 +113,31 @@ Task 1 只完成路径映射、原作者信息审计和三端基线验证，尚�
 5. `NOTICE` 不存在；只保护实际存在的 `LICENSE`、Git 历史和必要上游署名。
 
 Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自测试、最小实现和独立提交中继续更新本报告。
+
+## 6. Task 2 公共内容配置与安全默认值
+
+新增 `Kirameku-backend/app/public_site.py` 作为第三阶段公共内容配置的单一解析层。配置只从进程环境读取，不依赖数据库，也不会读取或回写本地 `.env`。安全默认值如下：
+
+| 环境变量 | 默认值 | 作用 |
+|---|---|---|
+| `PUBLIC_POSTS_ENABLED` | `false` | 关闭公共文章入口。 |
+| `PUBLIC_POST_SLUG_ALLOWLIST` | 空 | 未明确列出的历史文章不公开。解析时去除空项、首尾空格和重复 slug，并保留顺序。 |
+| `PUBLIC_CHATTERS_ENABLED` | `false` | 关闭公共动态入口。 |
+| `PUBLIC_ALBUMS_ENABLED` | `false` | 关闭公共相册入口。 |
+| `PUBLIC_STATS_NAMESPACE` | `kirameku-wan-v1` | 为后续统计隔离提供服务端 namespace；不通过公开接口下发。 |
+| `SITE_LAUNCH_DATE` | 空 | 可选 ISO 日期；非法值按未配置处理。 |
+
+新增无鉴权、无数据库依赖的 `GET /api/site/public-config`。响应模型严格限定为三个内容可见性布尔值与 `launchDateConfigured`，不暴露文章 allowlist、统计 namespace、环境变量、管理员信息、数据库地址或密钥。现有数据库型 `/api/site-config` 保持不变，避免扩大接口兼容范围。
+
+同时把 `CORS_ORIGINS` 的代码默认值收敛为 `http://localhost:3000,http://localhost:5173`，移除原作者线上域名；部署域名仍须由环境显式配置。
+
+### 6.1 测试证据
+
+| 命令 | 退出码 | 结果 |
+|---|---:|---|
+| `venv\Scripts\python.exe -m unittest tests.test_public_site_config -v`（实现前） | 1 | 5 项按预期失败：配置模块缺失，公开接口返回 404。 |
+| `venv\Scripts\python.exe -m unittest tests.test_public_site_config -v`（实现后） | 0 | 5/5 通过，覆盖安全默认值、allowlist 解析、布尔解析、日期校验和最小公开响应。 |
+| `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 15/15 通过，第二阶段 10 项回归未受影响。 |
+| `venv\Scripts\python.exe -m compileall -q app tests` | 0 | 后端应用与测试模块均可编译。 |
+
+以上测试均显式设置 `PYTHON_DOTENV_DISABLED=1`、测试专用数据库 URL 和测试专用密钥，未读取真实凭据。
