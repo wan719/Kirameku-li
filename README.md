@@ -115,14 +115,14 @@ pnpm start --hostname 127.0.0.1 --port 3000
 
 | 变量 | 初始策略 | 作用 |
 |---|---|---|
-| `PUBLIC_POSTS_ENABLED` | `false` | 文章公共列表与详情总开关。 |
-| `PUBLIC_POST_SLUG_ALLOWLIST` | 空 | 开启文章后仍只公开显式列出的 slug；多个值用逗号分隔。 |
+| `PUBLIC_POSTS_ENABLED` | `false` | `true` 会公开全部已发布文章；`false` 时只允许白名单内的已发布文章。 |
+| `PUBLIC_POST_SLUG_ALLOWLIST` | 空 | 仅在全局文章开关为 `false` 时用于单篇公开；多个 slug 用逗号分隔。 |
 | `PUBLIC_CHATTERS_ENABLED` | `false` | 动态公共接口开关；当前公共页面入口同时关闭。 |
 | `PUBLIC_ALBUMS_ENABLED` | `false` | 相册公共接口开关；当前公共页面入口同时关闭。 |
 | `PUBLIC_STATS_NAMESPACE` | `kirameku-wan-v1` | 新站访问统计命名空间，与历史统计隔离。 |
 | `SITE_LAUNCH_DATE` | 空 | 可选 ISO 日期 `YYYY-MM-DD`；为空时前台不显示运行天数。 |
 
-关闭的列表返回空结果，非公开详情统一返回 404。管理员接口仍要求有效 Token 和管理员身份，并可继续管理历史内容。
+`PUBLIC_POSTS_ENABLED=false` 且白名单为空时，公共列表为空；`PUBLIC_POSTS_ENABLED=true` 会公开全部已发布文章，不能把它当作白名单开关。非公开详情统一返回 404。管理员接口仍要求有效 Token 和管理员身份，并可继续管理历史内容。
 
 ## 其他配置
 

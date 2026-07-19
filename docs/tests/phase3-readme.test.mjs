@@ -24,6 +24,8 @@ test("documents the private-by-default public content policy", () => {
     assert.match(readme, new RegExp(`\\b${name}\\b`));
   }
   assert.match(readme, /默认关闭/);
+  assert.match(readme, /`PUBLIC_POSTS_ENABLED=false`[^\n]*白名单/);
+  assert.match(readme, /`PUBLIC_POSTS_ENABLED=true`[^\n]*全部已发布文章/);
 });
 
 test("documents runnable admin and draft workflows without default credentials", () => {

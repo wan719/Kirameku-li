@@ -120,7 +120,7 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 
 | 环境变量 | 默认值 | 作用 |
 |---|---|---|
-| `PUBLIC_POSTS_ENABLED` | `false` | 关闭公共文章入口。 |
+| `PUBLIC_POSTS_ENABLED` | `false` | 全局公开默认关闭；关闭时仍允许白名单内的已发布文章。 |
 | `PUBLIC_POST_SLUG_ALLOWLIST` | 空 | 未明确列出的历史文章不公开。解析时去除空项、首尾空格和重复 slug，并保留顺序。 |
 | `PUBLIC_CHATTERS_ENABLED` | `false` | 关闭公共动态入口。 |
 | `PUBLIC_ALBUMS_ENABLED` | `false` | 关闭公共相册入口。 |
@@ -321,7 +321,7 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 
 首页已按锁定顺序重构为 Hero、状态快照、重点项目、文章入口、站点信息和歌单整理中六段。`app/page.tsx` 不再并行请求历史文章数、动态数和相册数，也不再导入旧 `HomeClient` 聚合页；动态、照片墙、DogDiary 和相册组件源码仍保留，但默认首页配置全部关闭且首页展示层不导入它们。
 
-新增 `config/home.ts` 作为首页模块、空歌单和公共数据的类型化入口。首页首先读取后端 `/api/site/public-config`：配置请求失败、响应失败或结构非法时立即使用“全部公共内容关闭、无文章、无统计”的安全降级，不再继续探测旧内容。配置成功后仅在 `contentVisibility.posts=true` 时请求公共文章列表；访问统计单独读取隔离后的 `/api/visitors/count`，失败时显示“公开统计暂不可用”，绝不回退历史文章、动态、相册或原 namespace 数字。动态与相册开关关闭时没有对应请求和渲染路径。
+新增 `config/home.ts` 作为首页模块、空歌单和公共数据的类型化入口。首页首先读取后端 `/api/site/public-config`：配置请求失败、响应失败或结构非法时立即使用“全部公共内容关闭、无文章、无统计”的安全降级，不再继续探测旧内容。配置成功后始终请求已经应用后端统一可见性谓词的公共文章列表，使 `posts=false + allowlist` 的单篇文章与 `/posts` 保持一致；访问统计单独读取隔离后的 `/api/visitors/count`，失败时显示“公开统计暂不可用”，绝不回退历史文章、动态、相册或原 namespace 数字。动态与相册开关关闭时没有对应请求和渲染路径。
 
 三个重点项目直接遍历 `projectConfigs`；前两个进入统一配置的站内详情，SecondBrain 无 `Link`、仓库或按钮，保持不可点击。文章为空时显示锁定文案“这里会记录代码、灵感与成长，内容正在慢慢整理。”以及“查看项目”“关于我”两个按钮。站点信息只显示新 namespace 访问量和后端实际返回的可选运行天数。
 
@@ -335,7 +335,7 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 |---|---:|---|
 | `pnpm test:home`（实现前） | 1 | 按预期失败：`config/home.ts` 尚不存在。 |
 | `pnpm test:home`（旧歌单残留断言后） | 1 | 4/5 通过，新增断言按预期命中兼容配置中的旧歌单 ID。 |
-| `pnpm test:home`（最终） | 0 | 5/5 通过：六段模块默认值、后端失败安全降级、公开文章关闭时不发请求、开启时只取公共列表、页面顺序/空状态/旧模块与歌单约束。保留既知 `.ts` ESM 模块类型性能提示。 |
+| `pnpm test:home`（最终） | 0 | 5/5 通过：六段模块默认值、后端失败安全降级、`posts=false + allowlist` 仍显示后端过滤结果、全局开启时读取公共列表、页面顺序/空状态/旧模块与歌单约束。保留既知 `.ts` ESM 模块类型性能提示。 |
 | `pnpm test:config` | 0 | 5/5 通过。 |
 | `pnpm test:brand` | 0 | 4/4 通过。 |
 | `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
@@ -483,7 +483,7 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 
 ### 19.1 分支与提交清单
 
-执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至最终报告提交前共有 19 个第三阶段提交：
+执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至复查修正提交前共有 21 个第三阶段提交：
 
 | SHA | 提交 |
 |---|---|
@@ -506,8 +506,10 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 | `226e9a5` | `chore: remove remaining legacy author references` |
 | `7858d08` | `fix: remove legacy runtime defaults` |
 | `2db0f8e` | `fix: return 404 for hidden post pages` |
+| `01da853` | `docs: report phase three verification` |
+| `0d0748a` | `fix: surface allowlisted posts on homepage` |
 
-最终报告提交不能在自身内容中稳定引用自身 SHA，准确 SHA 以最终 `git log` 和 Codex 回复为准。
+最后一次复查更正文档不能在自身内容中稳定引用自身 SHA，准确 SHA 以最终 `git log` 和 Codex 回复为准。
 
 ### 19.2 修改文件概览
 
@@ -551,8 +553,8 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 | 入口 | 期望/实测 | 说明 |
 |---|---|---|
 | 后端 `/api/health`、`/docs`、`/openapi.json` | 200 | liveness 不依赖数据库；文档和 OpenAPI 可访问。 |
-| 后端 `/api/ready`（临时 SQLite） | 200 | 临时测试数据库可连接。 |
-| 后端 `/api/ready`（无 PostgreSQL） | 503 | 应用仍可启动，响应不暴露连接串或凭据。 |
+| 后端 `/api/health/ready`（临时 SQLite） | 200 | 临时测试数据库可连接。 |
+| 后端 `/api/health/ready`（无 PostgreSQL） | 503 | 应用仍可启动，响应不暴露连接串或凭据。 |
 | 前台 `/`、`/projects`、`/posts`、`/about` | 200 | 主公开页面可访问；文章为空状态。 |
 | `/projects/intern-pilot`、`/projects/intern-pilot-harmonyos-agent` | 200 | 两个白名单项目详情可访问。 |
 | `/moments`、`/photowall` | 404 | 公共动态与相册关闭；后台数据与管理能力保留。 |
@@ -572,8 +574,8 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 
 | 变量 | 默认/用途 |
 |---|---|
-| `PUBLIC_POSTS_ENABLED` | `false`，关闭公共文章。 |
-| `PUBLIC_POST_SLUG_ALLOWLIST` | 空，仅允许显式 slug；不会公开 draft。 |
+| `PUBLIC_POSTS_ENABLED` | `false`，全局公开关闭；`true` 会公开全部已发布文章。 |
+| `PUBLIC_POST_SLUG_ALLOWLIST` | 空；仅在全局开关为 `false` 时允许显式 slug，且不会公开 draft。 |
 | `PUBLIC_CHATTERS_ENABLED` | `false`，关闭公共动态。 |
 | `PUBLIC_ALBUMS_ENABLED` | `false`，关闭公共相册。 |
 | `PUBLIC_STATS_NAMESPACE` | `kirameku-wan-v1`，隔离旧访问量。 |
@@ -638,9 +640,13 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 1. 在仅本机保存的 `.env` 中配置真实 PostgreSQL 和强随机 `SECRET_KEY`，执行数据库初始化，确认 readiness 为 200。
 2. 运行 `python -m app.commands.create_admin` 交互创建唯一管理员；确认终端不显示密码，数据库中只保存哈希。
 3. 登录 `/admin/`，检查 `Kirameku · 晚` 标题、Logo、侧栏及文章/动态/相册历史数据均仍存在，并完成一轮只读检查和受控 CRUD。
-4. 保持三个公共开关为 false 验证空状态；随后仅在临时验收环境开启文章并配置单个 slug allowlist，确认只公开该 published 文章，draft 与其他历史内容仍不可见；验收后恢复 false。
+4. 保持三个公共开关为 false 验证空状态；随后继续保持 `PUBLIC_POSTS_ENABLED=false`，只配置单个 slug allowlist，确认只公开该 published 文章，draft 与其他历史内容仍不可见；验收后清空 allowlist。除非明确要公开全部已发布历史文章，否则不要设置 `PUBLIC_POSTS_ENABLED=true`。
 5. 用一份脱敏 Markdown 临时文件执行两次 `import_post_draft`，确认第二次更新同一 draft、不重复创建、不自动发布；再对已发布同 slug 验证拒绝覆盖。
 6. 在桌面与手机实机检查首页、项目列表、两个详情、文章、关于页、主题切换、移动抽屉、复制邮箱、减少动态效果；确认动态、照片墙和旧文章详情为 404。
 7. 仅在取得合法素材和明确公开意图后配置歌单、简历、站点启动日期、生产域名、OAuth 与 OSS；不要把真实凭据提交到 Git。
+
+### 19.11 独立复查修正
+
+最终独立代码审查发现主页曾以公开配置中的布尔值决定是否请求文章列表，这会漏掉 `PUBLIC_POSTS_ENABLED=false` 但命中 allowlist 的已发布文章；README 和首次报告还把全局开关与 allowlist 的关系写反。新增失败测试复现主页返回 0 篇，随后改为在公共配置有效时始终读取后端已过滤的文章列表，专项测试恢复 5/5；README 测试同步锁定 `false + allowlist` 与 `true = 全部已发布文章` 的准确语义。报告中的 readiness 路径也由错误的 `/api/ready` 更正为 `/api/health/ready`。
 
 第三阶段到此停止，等待 ChatGPT 复查；未合并 `main`、未推送部署、未创建 Release。
