@@ -327,7 +327,7 @@ Task 1 完成后，业务代码仍保持基线状态。后续 Task 将在各自�
 
 `MusicProvider` 改为只读取 `musicConfig`。当前歌单 ID 与歌曲 ID 均为空时直接结束加载，不再请求数据库型旧 `/api/site-config`，也不会构造 `/api/music` 请求；兼容 `siteConfig.ts` 内原作者歌单 ID 同步清空。首页只显示轻量“歌单整理中”状态，音乐播放器源码继续保留到 Task 12 集中清理。
 
-首页正式视觉新增 `public/brand/illustrations/resonance-sprite.webp`。插画使用内置 image generation 生成原创月牙、星光、共鸣圆环和抽象波形线条，先输出纯色键背景，再用安装的 `remove_chroma_key.py` 生成 alpha PNG，最后通过 Pillow 无损 WebP 编码。最终文件为 1003×1568、约 249 KiB、alpha 范围 0–255；浏览器实际解码自然尺寸为 480×750（Next 优化产物），无色键底或加载错误。插画没有人物、动物、文字、原作者素材、Live2D 造型或《鸣潮》元素；Hero 使用完整形态，文章空状态以小尺寸简化呈现。
+首页正式视觉新增 `public/brand/illustrations/resonance-spirit.webp`。插画使用内置 image generation 生成原创月牙、星光、共鸣圆环和抽象波形线条，先输出纯色键背景，再用安装的 `remove_chroma_key.py` 生成 alpha PNG，最后通过 Pillow 无损 WebP 编码。最终文件为 1003×1568、约 249 KiB、alpha 范围 0–255；浏览器实际解码自然尺寸为 480×750（Next 优化产物），无色键底或加载错误。插画没有人物、动物、文字、原作者素材、Live2D 造型或《鸣潮》元素；Hero 使用完整形态，文章空状态以小尺寸简化呈现。
 
 ### 13.1 测试与浏览器验收
 
@@ -483,7 +483,7 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 
 ### 19.1 分支与提交清单
 
-执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至最终验证记录提交前共有 22 个第三阶段提交：
+执行分支始终为 `feat/original-author-cleanup-basic-personalization`，没有重新创建分支、切换到 `main`、合并 `main`、部署生产或创建 Release。相对本地 `main`，截至本次文档提交前共有 24 个第三阶段提交：
 
 | SHA | 提交 |
 |---|---|
@@ -509,6 +509,8 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 | `01da853` | `docs: report phase three verification` |
 | `0d0748a` | `fix: surface allowlisted posts on homepage` |
 | `ac177a9` | `docs: correct public article visibility guidance` |
+| `e009360` | `docs: record phase three review fixes` |
+| `100bd28` | `fix: complete phase three visual assets` |
 
 最后一次复查更正文档不能在自身内容中稳定引用自身 SHA，准确 SHA 以最终 `git log` 和 Codex 回复为准。
 
@@ -520,7 +522,7 @@ README 新增 `Upstream attribution`，链接实际 `upstream` 远程 `https://g
 |---|---|
 | `Kirameku-backend/app/`、`tests/` | 公共内容开关与白名单、公共统计隔离、安全健康检查复验、管理员创建命令、Markdown 草稿导入、鉴权回归测试。 |
 | `Kirameku/app/`、`components/`、`config/`、`lib/` | 新品牌壳、首页、项目列表/详情、文章空状态、关于页、公共入口关闭、隐藏文章服务端 404、配置化音乐/简历安全空状态。 |
-| `Kirameku/public/brand/` | 原创 Logo、字标、favicon、共鸣插画和三张项目 WebP 封面。 |
+| `Kirameku/public/brand/` | 原创 Logo、字标、favicon、共鸣精灵、项目封面与 SecondBrain 分享图。 |
 | `Kirameku-backend/admin/` | 后台品牌标题、Logo、favicon、登录页/侧栏占位图和品牌回归测试。 |
 | 删除的旧资源与模块 | `public/live2d/`、旧 `public/images/`、根 `项目图片/`、旧作者 about/静态文章/部署笔记、旧公共首页聚合模块、旧动态相册静态数据和径向导航。 |
 | 文档 | 根 README、设计与执行任务、路径映射/审计记录、第三阶段执行报告和 README 回归测试。 |
@@ -596,7 +598,7 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 | 命令或检查 | 退出码 | 最终结果 |
 |---|---:|---|
 | 前台 `pnpm install --frozen-lockfile` | 0 | pnpm 11.9.0 冻结安装通过，无 npm/yarn lockfile。 |
-| 前台六组阶段测试 | 0 | `5 + 4 + 5 + 4 + 6 + 6 = 30/30` 通过。 |
+| 前台七组阶段测试 | 0 | `5 + 4 + 5 + 4 + 6 + 6 + 2 = 32/32` 通过。 |
 | 前台 `pnpm exec tsc --noEmit` | 0 | TypeScript 检查通过。 |
 | 前台 `pnpm build` | 0 | Next 16.2.4 生产构建成功，40 个页面；文章详情为动态服务端路由。 |
 | 前台 `pnpm lint` | 1 | 87 errors、60 warnings，均属阶段前历史债务；本阶段定向文件检查通过。 |
@@ -639,7 +641,7 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 ### 19.10 人工验收步骤
 
 1. 在仅本机保存的 `.env` 中配置真实 PostgreSQL 和强随机 `SECRET_KEY`，执行数据库初始化，确认 readiness 为 200。
-2. 运行 `python -m app.commands.create_admin` 交互创建唯一管理员；确认终端不显示密码，数据库中只保存哈希。
+2. 运行 `python -m app.scripts.create_admin` 交互创建唯一管理员；确认终端不显示密码，数据库中只保存哈希。
 3. 登录 `/admin/`，检查 `Kirameku · 晚` 标题、Logo、侧栏及文章/动态/相册历史数据均仍存在，并完成一轮只读检查和受控 CRUD。
 4. 保持三个公共开关为 false 验证空状态；随后继续保持 `PUBLIC_POSTS_ENABLED=false`，只配置单个 slug allowlist，确认只公开该 published 文章，draft 与其他历史内容仍不可见；验收后清空 allowlist。除非明确要公开全部已发布历史文章，否则不要设置 `PUBLIC_POSTS_ENABLED=true`。
 5. 用一份脱敏 Markdown 临时文件执行两次 `import_post_draft`，确认第二次更新同一 draft、不重复创建、不自动发布；再对已发布同 slug 验证拒绝覆盖。
@@ -653,5 +655,36 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 复查修正后的最终验证中，曾将 `pnpm exec tsc --noEmit` 与 `pnpm build` 并行启动；build 重写 `.next/types` 时，tsc 短暂因缺少生成中的 `routes.js` 退出 1。没有为此修改源码；改为串行后，`pnpm build` 退出 0、随后 `pnpm exec tsc --noEmit` 退出 0。最终再次执行前台阶段测试 30/30、后端测试 56/56、后台品牌测试 4/4、README 测试 5/5、后台 typecheck/build、后端 compileall/pip check，退出码均为 0。
 
 原审查者针对 `01da853..ac177a9` 复验后确认三项发现均已解决，没有剩余 Critical 或 Important 问题；保留的真实 PostgreSQL、已登录后台 CRUD、OAuth/OSS 联调仍按 19.9 节列为人工或环境验收项。
+
+## 20. ChatGPT 复查补正：第三阶段视觉素材
+
+提交 `100bd28 fix: complete phase three visual assets` 补齐锁定设计中的三项素材并接入真实前台路径。第二个文档提交因不能稳定自引用自身 SHA，其准确 SHA 以最终 `git log` 和 Codex 回复为准。
+
+| 素材 | 真实仓库路径 | 格式与尺寸 | 当前用途 / 预留用途 |
+|---|---|---|---|
+| 共鸣精灵 | `Kirameku/public/brand/illustrations/resonance-spirit.webp` | WebP，1003×1568，RGBA，约 249 KiB | 当前用于首页 Hero 与文章空状态；仅将原文件从错误的 `sprite` 命名统一为设计约定的 `spirit`，像素内容未改。 |
+| SecondBrain 横版封面 | `Kirameku/public/brand/projects/second-brain-cover.webp` | WebP，1600×900，严格 16:9，约 197 KiB | 当前用于 SecondBrain 项目卡；可作为后续公开文章列表、文章详情和 Open Graph 的安全视觉源。 |
+| SecondBrain 方形分享图 | `Kirameku/public/brand/projects/second-brain-share.webp` | WebP，1200×1200，严格 1:1，约 201 KiB | 当前作为仓库内已交付素材保留；用于后续社交分享和方形项目缩略场景，尚未虚构未存在的分享接线。 |
+
+两张 SecondBrain 图使用青绿、青蓝、深蓝与蓝紫品牌色，中央为空白笔记卡片，左侧为知识网络，右侧为不可读的代码线块与空白 AI 对话抽象元素，并由共鸣环、月牙和星点连接。素材没有真实 Obsidian 界面、私有文件名、真实聊天内容、真实代码、私有仓库地址、个人信息、原作者素材或版权角色。
+
+新增 `Kirameku/tests/visual-assets.test.mjs` 和 `pnpm test:assets`：读取 RIFF/WEBP 容器并解析 VP8X、VP8L 或 VP8 尺寸，自动检查三项文件存在且不是空占位、两张新图比例正确，并递归确认前台源码与测试不含旧文件名。实现前测试 0/2 按预期失败；实现后 2/2 通过。仓库级搜索同时确认源码、测试和文档不存在旧文件名残留。
+
+### 20.1 复查补正后的完整验证
+
+| 命令或检查 | 退出码 | 结果 |
+|---|---:|---|
+| `pnpm test:assets`（实现前） | 1 | 0/2，按预期命中三项约定文件不齐和旧文件名残留。 |
+| `pnpm test:assets`（实现后） | 0 | 2/2，WebP、文件存在、16:9、1:1 与前台旧文件名清零检查通过。 |
+| 定向测试、tsc、ESLint 并发验证批次 | 124 | OneDrive 文件扫描与多个工具并发时总任务超时，没有采用该批次作为通过证据；随后全部改为串行或纯测试并行复验。 |
+| 前台七组阶段测试 | 0 | `test:config` 5/5、`test:brand` 4/4、`test:home` 5/5、`test:projects` 4/4、`test:content` 6/6、`test:cleanup` 6/6、`test:assets` 2/2，共 32/32。 |
+| `pnpm exec tsc --noEmit` | 0 | 前台 TypeScript 检查通过。 |
+| `pnpm build` | 0 | Next.js 生产构建成功，40 个页面；后端未启动时保留既知非阻塞 RSS `ECONNREFUSED 127.0.0.1:8000` 日志。 |
+| 后端 `venv\Scripts\python.exe -m unittest discover -s tests -v` | 0 | 当前完整测试集 56/56 通过。 |
+| 后台 `pnpm test:brand` | 0 | 4/4 通过。 |
+| 后台 `pnpm typecheck` | 0 | Vue/TypeScript 类型检查通过。 |
+| 后台 `pnpm build` | 0 | Vite 生产构建通过，3337 个模块。 |
+| `node --test docs/tests/phase3-readme.test.mjs` | 0 | README 契约测试 5/5 通过。 |
+| `git diff --check` | 0 | 本次两项小提交无空白错误。 |
 
 第三阶段到此停止，等待 ChatGPT 复查；未合并 `main`、未推送部署、未创建 Release。
