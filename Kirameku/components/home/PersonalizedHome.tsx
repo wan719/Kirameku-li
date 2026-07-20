@@ -24,7 +24,7 @@ import {
 } from "@/config/site";
 
 
-const spritePath = "/brand/illustrations/resonance-sprite.webp";
+const spiritPath = "/brand/illustrations/resonance-spirit.webp";
 
 function formatPublishedDate(value: string | null) {
   if (!value) return "";
@@ -47,7 +47,7 @@ export default function PersonalizedHome({
           className="relative min-h-[560px] overflow-hidden border-b border-teal-900/10 dark:border-violet-200/10 sm:min-h-[600px] lg:min-h-[640px]"
         >
           <Image
-            src={spritePath}
+            src={spiritPath}
             alt="共鸣精灵，由月牙、星光与共鸣圆环组成"
             width={1003}
             height={1568}
@@ -227,7 +227,7 @@ export default function PersonalizedHome({
             ) : (
               <div className="mt-8 grid items-center gap-8 border-y border-slate-200 py-10 dark:border-slate-700 md:grid-cols-[140px_minmax(0,1fr)]">
                 <div className="relative mx-auto h-32 w-28 overflow-hidden" aria-hidden="true">
-                  <Image src={spritePath} alt="" fill sizes="112px" className="object-contain" />
+                  <Image src={spiritPath} alt="" fill sizes="112px" className="object-contain" />
                 </div>
                 <div className="min-w-0">
                   <p className="max-w-2xl font-serif text-xl leading-9 text-slate-700 dark:text-slate-200">

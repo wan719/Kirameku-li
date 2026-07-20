@@ -149,7 +149,7 @@ export const projectConfigs = [
     problem: "知识沉淀需要兼顾长期可维护性、公开表达与个人隐私边界。",
     status: "article-preparing",
     statusLabel: "文章整理中",
-    cover: "/brand/illustrations/resonance-sprite.webp",
+    cover: "/brand/projects/second-brain-cover.webp",
     techStack: ["Obsidian", "Markdown", "ChatGPT", "Codex"],
     capabilities: ["知识分类沉淀", "AI 协作工作流", "公开与私有边界管理"],
     milestones: ["私有工作流持续使用", "安全草稿导入能力已建立"],

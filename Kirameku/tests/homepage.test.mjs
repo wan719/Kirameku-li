@@ -150,7 +150,7 @@ test("homepage source follows the locked order and excludes legacy modules", asy
 
   assert.match(home, /这里会记录代码、灵感与成长，内容正在慢慢整理。/);
   assert.match(home, /projectConfigs\.map/);
-  assert.match(home, /resonance-sprite\.webp/);
+  assert.match(home, /resonance-spirit\.webp/);
   assert.doesNotMatch(home, /LatestChatterCarousel|PhotoWallPreview|DogDiary|CloudPlayer|LyricBar/);
   assert.match(musicProvider, /musicConfig/);
   assert.doesNotMatch(musicProvider, /\/api\/site-config/);
