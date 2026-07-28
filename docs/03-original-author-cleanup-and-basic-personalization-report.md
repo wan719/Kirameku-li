@@ -688,3 +688,96 @@ git grep -n -I -E "Starhiro|hiromu\.top|guh982719@gmail\.com|17943739323|hong\.j
 | `git diff --check` | 0 | 本次两项小提交无空白错误。 |
 
 第三阶段到此停止，等待 ChatGPT 复查；未合并 `main`、未推送部署、未创建 Release。
+
+## 21. 临时 Docker PostgreSQL 兼容验收
+
+本节记录第三阶段复查后的独立兼容验收。用户确认本机没有需要保留的真实历史数据库，因此本次只使用空白临时数据库、合成管理员身份和脱敏测试内容；没有读取本地 `.env`、真实凭据、个人数据或 SecondBrain 私有仓库。验收期间未修改源码、未切换或合并 `main`、未部署生产。
+
+### 21.1 临时环境与数据库初始化
+
+| 项目 | 实测结果 |
+|---|---|
+| Git 分支与起点 | `feat/original-author-cleanup-basic-personalization`，验收前 `HEAD=7a149cd`，工作区干净。 |
+| Docker | Docker Desktop Client/Server `28.5.1`，Linux containers，`overlayfs`；引擎启动后 `docker info` 正常。 |
+| PostgreSQL | 一次性 `postgres:16-alpine` 容器和命名数据卷，数据库名 `kirameku_acceptance`。 |
+| 网络边界 | PostgreSQL 只绑定 `127.0.0.1` 的随机临时端口；没有绑定外部网卡。 |
+| 凭据边界 | 数据库密码、管理员密码、`SECRET_KEY` 与 `DATABASE_URL` 仅作为当前进程的临时值使用，没有写入仓库、`.env`、报告或 Git。 |
+| 初始化 | 将当前仓库 `Kirameku-backend/init_db.sql` 通过 `psql -v ON_ERROR_STOP=1` 导入空库，退出码 0，共确认 19 张 public 表。 |
+
+### 21.2 健康检查、后台挂载与管理员认证
+
+后台先在 `Kirameku-backend/admin` 执行 `pnpm build`，退出码 0，Vite 完成 3337 个模块构建并生成 `dist`。随后使用明确约定的命令：
+
+```powershell
+python -m app.scripts.create_admin
+```
+
+交互创建一次性管理员，退出码 0；终端没有回显密码。数据库定向查询确认该账户 `is_admin=true`，且保存值不是输入的明文密码。
+
+FastAPI 使用临时 PostgreSQL 连接、`AUTO_CREATE_TABLES=false`、显式禁用 dotenv 和空 OSS 配置启动。实测结果：
+
+| 检查 | HTTP/退出码 | 结果 |
+|---|---:|---|
+| `GET /api/health` | 200 | liveness 正常。 |
+| `GET /api/health/ready` | 200 | PostgreSQL readiness 正常。 |
+| `GET /admin/` | 200 | FastAPI 成功挂载后台生产构建。 |
+| 浏览器加载 `/admin/#/login` | 0 | 页面标题为 `登录 | Kirameku · 晚`，登录表单和静态资源正常加载。 |
+| `POST /api/auth/login` | 200 | 使用一次性管理员完成后台同源认证，返回 `admin` 角色。 |
+| `GET /api/auth/me` | 200 | 管理员身份与权限可读取。 |
+
+自动化没有绕过后台页面的图形验证码；管理员认证和后续 CRUD 通过该后台实际调用的同一 `/api/auth/login` 与受保护管理 API 完成。
+
+### 21.3 文章 CRUD 与公开性矩阵
+
+使用管理员 Token 依次完成以下操作，所有管理请求均为 HTTP 200：
+
+1. 创建一篇临时 `published` 文章。
+2. 创建一篇临时 `draft` 文章。
+3. 修改 `published` 文章的标题、摘要和正文，数据库仍保持 `published`。
+
+随后保持 `PUBLIC_POSTS_ENABLED=false` 验证两组 allowlist：
+
+| 配置/入口 | 实测结果 |
+|---|---|
+| allowlist 仅包含 published slug，`GET /api/posts` | 200，只返回该 published 文章，计数为 1。 |
+| allowlist 仅包含 published slug，published 详情 | 200。 |
+| allowlist 仅包含 published slug，draft 详情 | 404。 |
+| allowlist 同时加入 published 与 draft slug，`GET /api/posts` | 200，仍只返回 published 文章，计数仍为 1。 |
+| allowlist 同时加入 published 与 draft slug，draft 详情 | 404。 |
+| allowlist 同时加入 draft slug，`GET /api/health/ready` | 200。 |
+
+因此 `PUBLIC_POSTS_ENABLED=false` 下的单篇 published 放行有效，draft 不会因为进入 allowlist 而公开。
+
+### 21.4 `import_post_draft` PostgreSQL 幂等验收
+
+在系统临时目录创建一份不含个人信息、私有路径、真实代码或真实正文的 Markdown，使用：
+
+```powershell
+python -m app.scripts.import_post_draft <temporary-markdown>
+```
+
+连续执行两次，退出码均为 0：
+
+| 次数 | 命令结果 | 数据库核验 |
+|---|---|---|
+| 第一次 | `created` | 新建临时文章，状态为 `draft`。 |
+| 第二次 | `updated` | ID 与第一次相同，标题与内容更新，状态仍为 `draft`。 |
+
+临时 Markdown 只存在于系统临时目录，验收后已删除；仓库与报告均未保存测试正文。
+
+### 21.5 测试记录与临时资源清理
+
+清理前定向计数为：文章 3、管理员 1、临时分类 1、临时标签 2、文章标签关联 2。执行事务安全的 PostgreSQL 清理后，上述五类计数均为 0；随后才停止服务并删除基础设施。
+
+最终清理复验：
+
+| 检查 | 结果 |
+|---|---|
+| FastAPI `8000` 监听 | 0。 |
+| 临时 PostgreSQL 本机端口监听 | 0。 |
+| `kirameku-pg-acceptance-*` 容器 | 0。 |
+| `kirameku-pg-acceptance-*` 数据卷 | 0。 |
+| `kirameku*acceptance*` 临时文件 | 0。 |
+| 仓库 `.env`、密码、Token、日志、数据库文件、测试正文 | 未创建、未修改、未暂存。 |
+
+本次无需代码修复；仅追加本节兼容验收报告。19.9 节“未连接真实 PostgreSQL”和“未使用管理员凭据验收 CRUD”的环境限制，现已由本节的一次性空库兼容验收覆盖；真实历史数据迁移仍不适用，因为用户明确确认没有需要保留的真实历史数据库。真实 OAuth、OSS、reader 服务和生产环境联调仍未执行。
